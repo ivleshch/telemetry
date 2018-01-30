@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">Telemetry</string>
+
+    <!--SpeedView-->
+    <string name="unit">%</string>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+
+    <string name="subMenuTitle">Lines</string>
+
+    <string name="titleSpeed">Speed</string>
+    <string name="titleAvailability">Availability</string>
+    <string name="titlePerformance">Performance</string>
+    <string name="titleStops">Stops</string>
+
+
+</resources>
