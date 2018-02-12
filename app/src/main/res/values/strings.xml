@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Telemetry</string>
+    <string name="app_name">Ю - Телеметрия</string>
 
     <!--SpeedView-->
     <string name="unit">%</string>
@@ -9,10 +9,13 @@
 
     <string name="subMenuTitle">Lines</string>
 
-    <string name="titleSpeed">Speed</string>
+    <string name="titleSpeed">Скорость</string>
     <string name="titleAvailability">Availability</string>
     <string name="titlePerformance">Performance</string>
-    <string name="titleStops">Stops</string>
+    <string name="titleStops">Остановки</string>
+
+    <string name="messageEmptyData">Данные за указанную дату отсутствуют</string>
+    <string name="emptyDescription">Отсутствует описание</string>
 
 
 </resources>

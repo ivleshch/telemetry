@@ -1,6 +1,6 @@
 package com.ivleshch.telemetry.data;
 
-import java.util.Date;
+import com.google.gson.annotations.SerializedName;
 
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
@@ -12,51 +12,45 @@ import io.realm.annotations.PrimaryKey;
 public class Stop extends RealmObject {
 
     @PrimaryKey
-    private Integer id;
-    private Date    date;
+    @SerializedName("UID")
+    private String uid;
+    @SerializedName("DATE")
+    private Long date;
+    @SerializedName("DURATION")
     private Integer duration;
-    private Reason  reason;
-    private Integer reasonCode;
-    private Device device;
-    private int deviceCode;
+    @SerializedName("REASON")
+    private Integer reason;
+    @SerializedName("REASON_DESCRIPTION")
+    private String reasonDescription;
+    @SerializedName("WORK_CENTER")
+    private String workCenter;
 
-    public int getDeviceCode() {
-        return deviceCode;
+    public Stop(String uid, String date, String duration, String reason, String reasonDescription, String workCenter) {
+        this.uid = uid;
+        this.date = Long.parseLong(date);;
+        this.duration = Integer.parseInt(duration);
+        this.reason = Integer.parseInt(reason);
+        this.reasonDescription = reasonDescription;
+        this.workCenter = workCenter;
     }
 
-    public void setDeviceCode(int deviceCode) {
-        this.deviceCode = deviceCode;
+    public Stop() {
+
     }
 
-    public Device getDevice() {
-        return device;
+    public String getUid() {
+        return uid;
     }
 
-    public void setDevice(Device device) {
-        this.device = device;
+    public void setUid(String uid) {
+        this.uid = uid;
     }
 
-    public Integer getReasonCode() {
-        return reasonCode;
-    }
-
-    public void setReasonCode(Integer reasonCode) {
-        this.reasonCode = reasonCode;
-    }
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public Date getDate() {
+    public Long getDate() {
         return date;
     }
 
-    public void setDate(Date date) {
+    public void setDate(Long date) {
         this.date = date;
     }
 
@@ -68,11 +62,27 @@ public class Stop extends RealmObject {
         this.duration = duration;
     }
 
-    public Reason getReason() {
+    public Integer getReason() {
         return reason;
     }
 
-    public void setReason(Reason reason) {
+    public void setReason(Integer reason) {
         this.reason = reason;
+    }
+
+    public String getReasonDescription() {
+        return reasonDescription;
+    }
+
+    public void setReasonDescription(String reasonDescription) {
+        this.reasonDescription = reasonDescription;
+    }
+
+    public String getWorkCenter() {
+        return workCenter;
+    }
+
+    public void setWorkCenter(String workCenter) {
+        this.workCenter = workCenter;
     }
 }

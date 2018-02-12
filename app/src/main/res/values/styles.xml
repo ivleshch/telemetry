@@ -16,40 +16,40 @@
         <item name="windowNoTitle">true</item>
     </style>
 
-    <style name="SpeedView" parent="SpeedView">
-        <item name="sv_centerCircleColor">@color/colorPrimaryLight</item>
+    <!--<style name="SpeedView" parent="SpeedView">-->
+        <!--<item name="sv_centerCircleColor">@color/colorPrimaryLight</item>-->
 
-        <item name="sv_highSpeedColor">@color/colorGreen500</item>
-        <item name="sv_mediumSpeedColor">@color/colorYellow500</item>
-        <item name="sv_lowSpeedColor">@color/colorRed500</item>
+        <!--<item name="sv_highSpeedColor">@color/colorGreen400</item>-->
+        <!--<item name="sv_mediumSpeedColor">@color/colorYellow400</item>-->
+        <!--<item name="sv_lowSpeedColor">@color/colorRed400</item>-->
 
-        <item name="sv_indicatorColor">@color/colorPrimaryDark</item>
-        <item name="sv_indicatorWidth">@dimen/indicatorWidth</item>
+        <!--<item name="sv_indicatorColor">@color/colorPrimaryDark</item>-->
+        <!--<item name="sv_indicatorWidth">@dimen/indicatorWidth</item>-->
 
-        <item name="sv_markColor">@color/colorPrimaryDark</item>
+        <!--<item name="sv_markColor">@color/colorPrimaryDark</item>-->
 
-        <item name="sv_speedTextColor">@color/colorPrimaryDark</item>
-        <item name="sv_speedTextFormat">INTEGER</item>
-        <item name="sv_speedTextPadding">@dimen/speedTextPadding</item>
-        <item name="sv_speedTextPosition">BOTTOM_CENTER</item>
-        <item name="sv_speedTextSize">@dimen/text_size_small</item>
+        <!--<item name="sv_speedTextColor">@color/colorPrimaryDark</item>-->
+        <!--<item name="sv_speedTextFormat">INTEGER</item>-->
+        <!--<item name="sv_speedTextPadding">@dimen/speedTextPadding</item>-->
+        <!--<item name="sv_speedTextPosition">BOTTOM_CENTER</item>-->
+        <!--<item name="sv_speedTextSize">@dimen/text_size_small</item>-->
 
 
-        <item name="sv_speedometerWidth">@dimen/speedometerWidth</item>
+        <!--<item name="sv_speedometerWidth">@dimen/speedometerWidth</item>-->
 
-        <item name="sv_unit">@string/unit</item>
-        <item name="sv_unitTextColor">@color/colorPrimaryDark</item>
-        <item name="sv_withTremble">false</item>
+        <!--<item name="sv_unit">@string/unit</item>-->
+        <!--<item name="sv_unitTextColor">@color/colorPrimaryDark</item>-->
+        <!--<item name="sv_withTremble">false</item>-->
 
-        <item name="sv_tickNumber">2</item>
+        <!--<item name="sv_tickNumber">2</item>-->
 
-        <item name="sv_mediumSpeedPercent">66</item>
-        <item name="sv_lowSpeedPercent">33</item>
+        <!--<item name="sv_mediumSpeedPercent">66</item>-->
+        <!--<item name="sv_lowSpeedPercent">33</item>-->
 
-        <item name="sv_maxSpeed">100</item>
-        <item name="sv_minSpeed">0</item>
+        <!--<item name="sv_maxSpeed">100</item>-->
+        <!--<item name="sv_minSpeed">0</item>-->
 
-    </style>
+    <!--</style>-->
 
 
 </resources>

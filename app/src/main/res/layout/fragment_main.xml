@@ -11,174 +11,583 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="150dp"
-        android:gravity="center"
-        android:layout_marginBottom="10dp"
-
-        android:orientation="horizontal">
+        <include layout="@layout/empty_data" />
 
         <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_gravity="center"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:orientation="vertical"
-            android:padding="5dp">
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:maxLines="1"
-                android:text="@string/titleAvailability"
-                android:textColor="@color/colorPrimary"
-                android:textSize="@dimen/text_size_small"
-                android:textStyle="bold" />
-
-            <com.github.anastr.speedviewlib.SpeedView
-                android:id="@+id/sv_avaibility"
-                style="@style/SpeedView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_gravity="center"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:orientation="vertical"
-            android:padding="5dp">
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:maxLines="1"
-                android:text="@string/titlePerformance"
-                android:textColor="@color/colorPrimary"
-                android:textSize="@dimen/text_size_small"
-                android:textStyle="bold" />
-
-
-            <com.github.anastr.speedviewlib.SpeedView
-                android:id="@+id/sv_performance"
-                style="@style/SpeedView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-
-                />
-
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_gravity="center"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:orientation="vertical"
-            android:padding="5dp">
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:maxLines="1"
-                android:text="@string/titleSpeed"
-                android:textColor="@color/colorPrimary"
-                android:textSize="@dimen/text_size_small"
-                android:textStyle="bold" />
-
-            <com.github.anastr.speedviewlib.SpeedView
-                android:id="@+id/sv_speed"
-                style="@style/SpeedView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-
-                custom:sv_centerCircleColor="@android:color/transparent"
-
-                custom:sv_endDegree="360"
-                custom:sv_indicator="NoIndicator"
-
-                custom:sv_lowSpeedPercent="0"
-
-                custom:sv_markColor="#4caf50"
-                custom:sv_maxSpeed="10000"
-
-                custom:sv_mediumSpeedPercent="0"
-
-                custom:sv_speedTextPosition="CENTER"
-
-                custom:sv_speedometerWidth="5dp"
-                custom:sv_startDegree="0"
-                custom:sv_unit="psc./min"
-                custom:sv_unitUnderSpeedText="true"
-
-                />
-
-
-        </LinearLayout>
-
-
-    </LinearLayout>
-
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:orientation="vertical">
-
-        <!--<FrameLayout-->
-        <!--android:id="@+id/fragment_graph"-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="match_parent" />-->
-
-        <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
             android:gravity="center"
-            android:maxLines="1"
-            android:text="@string/titleSpeed"
-            android:textColor="@color/colorPrimary"
-            android:textSize="@dimen/text_size_small"
-            android:textStyle="bold"
-            />
+
+            android:orientation="horizontal">
+
+            <include layout="@layout/item_line" />
+
+            <!--<android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"-->
+                <!--xmlns:card_view="http://schemas.android.com/apk/res-auto"-->
+                <!--android:id="@+id/card_view"-->
+                <!--android:layout_width="match_parent"-->
+                <!--android:layout_height="wrap_content"-->
+                <!--android:layout_marginBottom="3dp"-->
+                <!--android:layout_marginLeft="5dp"-->
+                <!--android:layout_marginRight="5dp"-->
+                <!--android:layout_marginTop="3dp"-->
+                <!--card_view:cardCornerRadius="4dp">-->
+
+                <!--<LinearLayout-->
+                    <!--android:layout_width="match_parent"-->
+                    <!--android:layout_height="match_parent"-->
+                    <!--android:background="@drawable/ripple_card_view"-->
+                    <!--android:orientation="vertical">-->
+
+                    <!--<LinearLayout-->
+                        <!--android:layout_width="match_parent"-->
+                        <!--android:layout_height="wrap_content">-->
+
+                        <!--<TextView-->
+                            <!--android:id="@+id/tv_work_center"-->
+                            <!--android:layout_width="match_parent"-->
+                            <!--android:layout_height="match_parent"-->
+                            <!--android:background="@color/colorPrimary"-->
+                            <!--android:gravity="center"-->
+
+                            <!--android:textColor="@color/colorTextIcons"-->
+                            <!--android:textSize="@dimen/text_size_middle" />-->
+
+                    <!--</LinearLayout>-->
+
+                    <!--<LinearLayout-->
+                        <!--android:layout_width="match_parent"-->
+                        <!--android:layout_height="wrap_content"-->
+                        <!--android:orientation="horizontal">-->
+
+                        <!--<LinearLayout-->
+                            <!--android:layout_width="0dp"-->
+                            <!--android:layout_height="wrap_content"-->
+                            <!--android:layout_weight="1"-->
+                            <!--android:orientation="vertical">-->
+
+                            <!--<TextView-->
+                                <!--android:layout_width="wrap_content"-->
+                                <!--android:layout_height="wrap_content"-->
+                                <!--android:layout_gravity="center"-->
+                                <!--android:text="Мастер:"-->
+                                <!--android:textColor="@color/colorSecondaryText"-->
+                                <!--android:textSize="@dimen/text_size_small" />-->
+
+                            <!--<TextView-->
+                                <!--android:id="@+id/tv_master"-->
+                                <!--android:layout_width="wrap_content"-->
+                                <!--android:layout_height="wrap_content"-->
+                                <!--android:layout_gravity="center"-->
+                                <!--android:gravity="center"-->
+                                <!--android:textColor="@color/colorPrimaryText"-->
+                                <!--android:textSize="@dimen/text_size_small" />-->
 
 
-        <com.github.mikephil.charting.charts.LineChart
-            android:id="@+id/line_chart"
-            android:layout_width="match_parent"
-            android:layout_height="300dp"
-            android:visibility="visible" />
+                        <!--</LinearLayout>-->
 
-        <TextView
+                        <!--<include layout="@layout/divider_vertical" />-->
+
+                        <!--<LinearLayout-->
+                            <!--android:layout_width="0dp"-->
+                            <!--android:layout_height="wrap_content"-->
+                            <!--android:layout_weight="1"-->
+                            <!--android:orientation="vertical">-->
+
+                            <!--<TextView-->
+                                <!--android:layout_width="wrap_content"-->
+                                <!--android:layout_height="wrap_content"-->
+                                <!--android:layout_gravity="center"-->
+                                <!--android:text="Продукт:"-->
+                                <!--android:textColor="@color/colorSecondaryText"-->
+                                <!--android:textSize="@dimen/text_size_small" />-->
+
+                            <!--<TextView-->
+                                <!--android:id="@+id/tv_nomenclature"-->
+                                <!--android:layout_width="wrap_content"-->
+                                <!--android:layout_height="wrap_content"-->
+                                <!--android:layout_gravity="center"-->
+                                <!--android:gravity="center"-->
+                                <!--android:textColor="@color/colorPrimaryText"-->
+                                <!--android:textSize="@dimen/text_size_small" />-->
+
+
+                        <!--</LinearLayout>-->
+
+                    <!--</LinearLayout>-->
+
+                    <!--<include layout="@layout/divider_horizontal" />-->
+
+                    <!--<LinearLayout-->
+                        <!--android:id="@+id/ll_line_oee"-->
+                        <!--android:layout_width="match_parent"-->
+                        <!--android:layout_height="wrap_content"-->
+
+                        <!--android:orientation="horizontal">-->
+
+                        <!--<TextView-->
+                            <!--android:layout_width="0dp"-->
+                            <!--android:layout_height="wrap_content"-->
+                            <!--android:layout_weight="1"-->
+                            <!--android:gravity="right|center"-->
+                            <!--android:text="OEE:"-->
+                            <!--android:textColor="@color/colorPrimaryText"-->
+                            <!--android:textSize="@dimen/text_size_middle" />-->
+
+                        <!--<TextView-->
+                            <!--android:id="@+id/tv_oee_percent"-->
+                            <!--android:layout_width="0dp"-->
+                            <!--android:layout_height="wrap_content"-->
+                            <!--android:layout_weight="1"-->
+                            <!--android:gravity="left|center"-->
+                            <!--android:textColor="@color/colorPrimaryText"-->
+                            <!--android:textSize="@dimen/text_size_middle"-->
+                            <!--android:textStyle="bold" />-->
+
+                    <!--</LinearLayout>-->
+
+                    <!--<include layout="@layout/divider_horizontal" />-->
+
+                    <!--<LinearLayout-->
+                        <!--android:layout_width="match_parent"-->
+                        <!--android:layout_height="wrap_content"-->
+                        <!--android:orientation="horizontal">-->
+
+                        <!--<LinearLayout-->
+                            <!--android:id="@+id/ll_line_availability"-->
+                            <!--android:layout_width="0dp"-->
+                            <!--android:layout_height="wrap_content"-->
+                            <!--android:layout_weight="1"-->
+
+                            <!--android:orientation="horizontal">-->
+
+                            <!--<TextView-->
+                                <!--android:layout_width="0dp"-->
+                                <!--android:layout_height="wrap_content"-->
+                                <!--android:layout_weight="1"-->
+                                <!--android:gravity="right|center"-->
+                                <!--android:text="A:"-->
+                                <!--android:textColor="@color/colorPrimaryText"-->
+                                <!--android:textSize="@dimen/text_size_middle" />-->
+
+                            <!--<TextView-->
+                                <!--android:id="@+id/tv_availability_percent"-->
+                                <!--android:layout_width="0dp"-->
+                                <!--android:layout_height="wrap_content"-->
+                                <!--android:layout_weight="1"-->
+                                <!--android:gravity="left|center"-->
+                                <!--android:textColor="@color/colorPrimaryText"-->
+                                <!--android:textSize="@dimen/text_size_middle"-->
+                                <!--android:textStyle="bold" />-->
+
+                        <!--</LinearLayout>-->
+
+                        <!--<include layout="@layout/divider_vertical" />-->
+
+                        <!--<LinearLayout-->
+                            <!--android:id="@+id/ll_line_performance"-->
+                            <!--android:layout_width="0dp"-->
+                            <!--android:layout_height="wrap_content"-->
+                            <!--android:layout_weight="1"-->
+
+                            <!--android:orientation="horizontal">-->
+
+                            <!--<TextView-->
+                                <!--android:layout_width="0dp"-->
+                                <!--android:layout_height="wrap_content"-->
+                                <!--android:layout_weight="1"-->
+                                <!--android:gravity="right|center"-->
+                                <!--android:text="P:"-->
+                                <!--android:textColor="@color/colorPrimaryText"-->
+                                <!--android:textSize="@dimen/text_size_middle" />-->
+
+                            <!--<TextView-->
+                                <!--android:id="@+id/tv_performance_percent"-->
+                                <!--android:layout_width="0dp"-->
+                                <!--android:layout_height="wrap_content"-->
+                                <!--android:layout_weight="1"-->
+                                <!--android:gravity="left|center"-->
+                                <!--android:textColor="@color/colorPrimaryText"-->
+                                <!--android:textSize="@dimen/text_size_middle"-->
+                                <!--android:textStyle="bold" />-->
+
+                        <!--</LinearLayout>-->
+
+                        <!--<include layout="@layout/divider_vertical" />-->
+
+                        <!--<LinearLayout-->
+                            <!--android:id="@+id/ll_line_quality"-->
+                            <!--android:layout_width="0dp"-->
+                            <!--android:layout_height="wrap_content"-->
+                            <!--android:layout_weight="1"-->
+
+                            <!--android:orientation="horizontal">-->
+
+                            <!--<TextView-->
+                                <!--android:layout_width="0dp"-->
+                                <!--android:layout_height="wrap_content"-->
+                                <!--android:layout_weight="1"-->
+                                <!--android:gravity="right|center"-->
+                                <!--android:text="Q:"-->
+                                <!--android:textColor="@color/colorPrimaryText"-->
+                                <!--android:textSize="@dimen/text_size_middle" />-->
+
+                            <!--<TextView-->
+                                <!--android:id="@+id/tv_quality_percent"-->
+                                <!--android:layout_width="0dp"-->
+                                <!--android:layout_height="wrap_content"-->
+                                <!--android:layout_weight="1"-->
+                                <!--android:gravity="left|center"-->
+                                <!--android:textColor="@color/colorPrimaryText"-->
+                                <!--android:textSize="@dimen/text_size_middle"-->
+                                <!--android:textStyle="bold" />-->
+
+                        <!--</LinearLayout>-->
+
+                    <!--</LinearLayout>-->
+
+                    <!--<include layout="@layout/divider_horizontal" />-->
+
+                    <!--<LinearLayout-->
+                        <!--android:layout_width="match_parent"-->
+                        <!--android:layout_height="wrap_content"-->
+                        <!--android:orientation="horizontal">-->
+
+                        <!--<LinearLayout-->
+                            <!--android:layout_width="0dp"-->
+                            <!--android:layout_height="wrap_content"-->
+                            <!--android:layout_weight="1"-->
+                            <!--android:orientation="vertical">-->
+
+                            <!--<TextView-->
+                                <!--android:layout_width="wrap_content"-->
+                                <!--android:layout_height="wrap_content"-->
+                                <!--android:layout_gravity="center"-->
+                                <!--android:text="К-во план:"-->
+                                <!--android:textColor="@color/colorSecondaryText"-->
+                                <!--android:textSize="@dimen/text_size_small" />-->
+
+                            <!--<TextView-->
+                                <!--android:id="@+id/tv_quantity_plan"-->
+                                <!--android:layout_width="wrap_content"-->
+                                <!--android:layout_height="wrap_content"-->
+                                <!--android:layout_gravity="center"-->
+                                <!--android:gravity="center"-->
+                                <!--android:textColor="@color/colorPrimaryText"-->
+                                <!--android:textSize="@dimen/text_size_small" />-->
+
+
+                        <!--</LinearLayout>-->
+
+                        <!--<include layout="@layout/divider_vertical" />-->
+
+                        <!--<LinearLayout-->
+                            <!--android:layout_width="0dp"-->
+                            <!--android:layout_height="wrap_content"-->
+                            <!--android:layout_weight="1"-->
+                            <!--android:orientation="vertical">-->
+
+                            <!--<TextView-->
+                                <!--android:layout_width="wrap_content"-->
+                                <!--android:layout_height="wrap_content"-->
+                                <!--android:layout_gravity="center"-->
+                                <!--android:text="К-во факт:"-->
+                                <!--android:textColor="@color/colorSecondaryText"-->
+                                <!--android:textSize="@dimen/text_size_small" />-->
+
+                            <!--<TextView-->
+                                <!--android:id="@+id/tv_quantity_fact"-->
+                                <!--android:layout_width="wrap_content"-->
+                                <!--android:layout_height="wrap_content"-->
+                                <!--android:layout_gravity="center"-->
+                                <!--android:gravity="center"-->
+                                <!--android:textColor="@color/colorPrimaryText"-->
+                                <!--android:textSize="@dimen/text_size_small" />-->
+
+
+                        <!--</LinearLayout>-->
+
+
+                    <!--</LinearLayout>-->
+
+                    <!--<include layout="@layout/divider_horizontal" />-->
+
+                    <!--<LinearLayout-->
+                        <!--android:layout_width="match_parent"-->
+                        <!--android:layout_height="wrap_content"-->
+                        <!--android:orientation="horizontal">-->
+
+
+                        <!--<LinearLayout-->
+                            <!--android:layout_width="0dp"-->
+                            <!--android:layout_height="wrap_content"-->
+                            <!--android:layout_weight="1"-->
+                            <!--android:orientation="vertical">-->
+
+                            <!--<TextView-->
+                                <!--android:layout_width="wrap_content"-->
+                                <!--android:layout_height="wrap_content"-->
+                                <!--android:layout_gravity="center"-->
+                                <!--android:text="Брак:"-->
+                                <!--android:textColor="@color/colorSecondaryText"-->
+                                <!--android:textSize="@dimen/text_size_small" />-->
+
+                            <!--<TextView-->
+                                <!--android:id="@+id/tv_quantity_defect"-->
+                                <!--android:layout_width="wrap_content"-->
+                                <!--android:layout_height="wrap_content"-->
+                                <!--android:layout_gravity="center"-->
+                                <!--android:gravity="center"-->
+                                <!--android:textColor="@color/colorPrimaryText"-->
+                                <!--android:textSize="@dimen/text_size_small" />-->
+
+
+                        <!--</LinearLayout>-->
+
+                        <!--<include layout="@layout/divider_vertical" />-->
+
+                        <!--<LinearLayout-->
+                            <!--android:layout_width="0dp"-->
+                            <!--android:layout_height="wrap_content"-->
+                            <!--android:layout_weight="1"-->
+                            <!--android:orientation="vertical">-->
+
+                            <!--<TextView-->
+                                <!--android:layout_width="wrap_content"-->
+                                <!--android:layout_height="wrap_content"-->
+                                <!--android:layout_gravity="center"-->
+                                <!--android:text="Отходы:"-->
+                                <!--android:textColor="@color/colorSecondaryText"-->
+                                <!--android:textSize="@dimen/text_size_small" />-->
+
+                            <!--<TextView-->
+                                <!--android:id="@+id/tv_quantity_waste"-->
+                                <!--android:layout_width="wrap_content"-->
+                                <!--android:layout_height="wrap_content"-->
+                                <!--android:layout_gravity="center"-->
+                                <!--android:gravity="center"-->
+                                <!--android:textColor="@color/colorPrimaryText"-->
+                                <!--android:textSize="@dimen/text_size_small" />-->
+
+
+                        <!--</LinearLayout>-->
+
+                    <!--</LinearLayout>-->
+
+                    <!--<include layout="@layout/divider_horizontal" />-->
+
+                    <!--<LinearLayout-->
+                        <!--android:layout_width="match_parent"-->
+                        <!--android:layout_height="wrap_content"-->
+                        <!--android:orientation="horizontal">-->
+
+                        <!--<LinearLayout-->
+                            <!--android:layout_width="0dp"-->
+                            <!--android:layout_height="wrap_content"-->
+                            <!--android:layout_weight="1"-->
+                            <!--android:orientation="vertical">-->
+
+                            <!--<TextView-->
+                                <!--android:layout_width="wrap_content"-->
+                                <!--android:layout_height="wrap_content"-->
+                                <!--android:layout_gravity="center"-->
+                                <!--android:text="Всего простоев:"-->
+                                <!--android:textColor="@color/colorSecondaryText"-->
+                                <!--android:textSize="@dimen/text_size_small" />-->
+
+                            <!--<TextView-->
+                                <!--android:id="@+id/tv_quantity_stop"-->
+                                <!--android:layout_width="wrap_content"-->
+                                <!--android:layout_height="wrap_content"-->
+                                <!--android:layout_gravity="center"-->
+                                <!--android:gravity="center"-->
+                                <!--android:textColor="@color/colorPrimaryText"-->
+                                <!--android:textSize="@dimen/text_size_small" />-->
+
+
+                        <!--</LinearLayout>-->
+
+                        <!--<include layout="@layout/divider_vertical" />-->
+
+                        <!--<LinearLayout-->
+                            <!--android:layout_width="0dp"-->
+                            <!--android:layout_height="wrap_content"-->
+                            <!--android:layout_weight="1"-->
+                            <!--android:orientation="vertical">-->
+
+                            <!--<TextView-->
+                                <!--android:layout_width="wrap_content"-->
+                                <!--android:layout_height="wrap_content"-->
+                                <!--android:layout_gravity="center"-->
+                                <!--android:text="Время простоев:"-->
+                                <!--android:textColor="@color/colorSecondaryText"-->
+                                <!--android:textSize="@dimen/text_size_small" />-->
+
+                            <!--<TextView-->
+                                <!--android:id="@+id/tv_duration_stop"-->
+                                <!--android:layout_width="wrap_content"-->
+                                <!--android:layout_height="wrap_content"-->
+                                <!--android:layout_gravity="center"-->
+                                <!--android:gravity="center"-->
+                                <!--android:textColor="@color/colorPrimaryText"-->
+                                <!--android:textSize="@dimen/text_size_small" />-->
+
+
+                        <!--</LinearLayout>-->
+
+
+                    <!--</LinearLayout>-->
+
+                    <!--<include layout="@layout/divider_horizontal" />-->
+
+                    <!--<LinearLayout-->
+                        <!--android:layout_width="match_parent"-->
+                        <!--android:layout_height="wrap_content"-->
+                        <!--android:orientation="horizontal">-->
+
+
+                        <!--<LinearLayout-->
+                            <!--android:layout_width="0dp"-->
+                            <!--android:layout_height="wrap_content"-->
+                            <!--android:layout_weight="1"-->
+                            <!--android:orientation="vertical">-->
+
+                            <!--<TextView-->
+                                <!--android:layout_width="wrap_content"-->
+                                <!--android:layout_height="wrap_content"-->
+                                <!--android:layout_gravity="center"-->
+                                <!--android:ellipsize="end"-->
+                                <!--android:maxLines="1"-->
+                                <!--android:text="гл. причина простоя:"-->
+                                <!--android:textColor="@color/colorSecondaryText"-->
+                                <!--android:textSize="@dimen/text_size_small" />-->
+
+                            <!--<TextView-->
+                                <!--android:id="@+id/tv_reason_stop"-->
+                                <!--android:layout_width="wrap_content"-->
+                                <!--android:layout_height="wrap_content"-->
+                                <!--android:layout_gravity="center"-->
+                                <!--android:ellipsize="end"-->
+                                <!--android:gravity="center"-->
+                                <!--android:maxLines="1"-->
+                                <!--android:textColor="@color/colorPrimaryText"-->
+                                <!--android:textSize="@dimen/text_size_small" />-->
+
+
+                        <!--</LinearLayout>-->
+
+                    <!--</LinearLayout>-->
+
+                <!--</LinearLayout>-->
+
+
+            <!--</android.support.v7.widget.CardView>-->
+
+
+        </LinearLayout>
+
+
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center"
-            android:maxLines="1"
-            android:text="@string/titleStops"
-            android:textColor="@color/colorPrimary"
-            android:textSize="@dimen/text_size_small"
-            android:textStyle="bold"
-            android:layout_marginTop="@dimen/activity_view_margin_big"
-            />
+            android:layout_gravity="center"
+            android:orientation="vertical">
 
-        <com.github.mikephil.charting.charts.BarChart
-            android:id="@+id/bar_chart"
-            android:layout_width="match_parent"
-            android:layout_height="300dp"
-            android:visibility="visible" />
+            <!--<FrameLayout-->
+            <!--android:id="@+id/fragment_graph"-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="match_parent" />-->
+            <RelativeLayout
+                android:id="@+id/rl_line_chart"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
 
-    </LinearLayout>
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="@dimen/activity_view_margin_middle"
+                    android:gravity="center"
+                    android:maxLines="1"
+                    android:text="@string/titleSpeed"
+                    android:textColor="@color/colorPrimary"
+                    android:textSize="@dimen/text_size_small"
+                    android:textStyle="bold" />
+
+
+                <com.github.mikephil.charting.charts.LineChart
+                    android:id="@+id/line_chart"
+                    android:layout_width="match_parent"
+                    android:layout_height="300dp"
+                    android:visibility="visible"
+                    />
+
+            </RelativeLayout>
+
+            <LinearLayout
+                android:id="@+id/ll_bar_chart"
+                android:layout_marginTop="@dimen/activity_view_margin_middle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_alignParentRight="true"
+                android:layout_alignParentTop="true"
+                >
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:maxLines="1"
+                    android:text="@string/titleStops"
+                    android:textColor="@color/colorPrimary"
+                    android:textSize="@dimen/text_size_small"
+                    android:textStyle="bold"
+                    android:layout_marginRight="@dimen/activity_view_margin"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Количество"
+                    android:textColor="@color/colorPrimary"/>
+
+                <Switch
+                    android:id="@+id/switchButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:clickable="true"
+                    android:switchMinWidth="56dp"
+
+                    />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Время"
+                    android:textColor="@color/colorPrimary"/>
+
+            </LinearLayout>
+
+
+            <RelativeLayout
+                android:id="@+id/rl_bar_chart"
+                android:layout_marginTop="@dimen/activity_view_margin"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+
+                <com.github.mikephil.charting.charts.BarChart
+                    android:id="@+id/bar_chart"
+                    android:layout_width="match_parent"
+                    android:layout_height="300dp"
+                    android:visibility="visible" />
+
+
+            </RelativeLayout>
+        </LinearLayout>
+
+
     </LinearLayout>
 
 </android.support.v4.widget.NestedScrollView>

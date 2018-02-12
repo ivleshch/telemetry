@@ -12,8 +12,9 @@
         android:layout_centerHorizontal="true"
         android:text=""
         android:textSize="@dimen/text_size_small"
-        android:textColor="@color/colorRed500"
+        android:textColor="@color/colorPrimaryText"
         android:gravity="center"
+        android:background="@drawable/rounded_corners"
 
         android:textAppearance="?android:attr/textAppearanceSmall" />
 

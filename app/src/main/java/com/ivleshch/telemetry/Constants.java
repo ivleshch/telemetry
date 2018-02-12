@@ -6,6 +6,8 @@ package com.ivleshch.telemetry;
 
 public class Constants {
 
+
+
     public static final String START_OF_SHIFT = "start_of_shift";
     public static final String END_OF_SHIFT   = "end_of_shift";
 
@@ -25,8 +27,8 @@ public class Constants {
     public static final String FIRST_SHIFT_NAME =  "08:00 - 20:00";
     public static final String SECOND_SHIFT_NAME = "20:00 - 08:00";
 
-    public static final Integer TIME_INTERVAL_NOTIFICATION_START = 60000;  //60 sec
-    public static final Integer TIME_INTERVAL_NOTIFICATION_REPEAT = 60000; //60 sec
+    public static final Integer TIME_INTERVAL_NOTIFICATION_START = 10000;  //60 sec
+    public static final Integer TIME_INTERVAL_NOTIFICATION_REPEAT = 10000; //60 sec
 
     public static final Integer ASYNC_TASK_RESULT_SUCCESSFUL = 2001;
     public static final Integer ASYNC_TASK_RESULT_FAILED = 2002;
@@ -34,5 +36,20 @@ public class Constants {
     public static final Integer TIMER_ASYNC_TASK_RESULT_SUCCESSFUL = 3001;
     public static final Integer TIMER_ASYNC_TASK_RESULT_FAILED = 3002;
     public static final int     TIMER_RUN_ASYNC = 3;
+
+    public static final int PERCENT_COLOR_GRREN = 90;
+    public static final int PERCENT_COLOR_YELLOW = 70;
+    public static final int PERCENT_COLOR_RED = 60;
+
+    public static final int LINE_FRAGMENT   = 10001;
+    public static final int CHART_FRAGMENT  = 10002;
+
+    public static final String FRAGMENT_LINE_CLASS = "com.ivleshch.telemetry.FragmentLines";
+    public static final String FRAGMENT_MAIN_CLASS = "com.ivleshch.telemetry.FragmentMain";
+
+    public static final String FRAGMENT_CLICK_ON_LINE = "fragment_click_on_line";
+
+    public static Integer NO_DATA = -1;
+
 
 }

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#3F51B5</color>
-    <color name="colorPrimaryDark">#303F9F</color>
-    <color name="colorPrimaryLight">#C5CAE9</color>
+    <color name="colorPrimary">#009688</color>
+    <color name="colorPrimaryDark">#00796B</color>
+    <color name="colorPrimaryLight">#B2DFDB</color>
 
     <color name="colorTextIcons">#FFFFFF</color>
     <color name="colorPrimaryText">#212121</color>
@@ -11,10 +11,42 @@
 
     <color name="colorAccent">#FF4081</color>
 
+
+    <!--<color name="colorPrimary">#3F51B5</color>-->
+    <!--<color name="colorPrimaryDark">#303F9F</color>-->
+    <!--<color name="colorPrimaryLight">#C5CAE9</color>-->
+
+    <!--<color name="colorTextIcons">#FFFFFF</color>-->
+    <!--<color name="colorPrimaryText">#212121</color>-->
+    <!--<color name="colorSecondaryText">#757575</color>-->
+    <!--<color name="colorDivider">#BDBDBD</color>-->
+
+    <!--<color name="colorAccent">#FF4081</color>-->
+
     <!--SpeedView-->
+
+    <color name="colorTeal800">#00695c</color>
+    <color name="colorTeal500">#009688</color>
+    <color name="colorTeal400">#26a69a</color>
+    <color name="colorTeal300">#4db6ac</color>
+
+    <color name="colorGreen800">#2e7d32</color>
     <color name="colorGreen500">#4caf50</color>
-    <color name="colorYellow500">#ffeb3b</color>
-    <color name="colorRed500">#f44336</color>
+    <color name="colorGreen400">#66bb6a</color>
+    <color name="colorGreen300">#81c784</color>
+
     <color name="colorGrey500">#9e9e9e</color>
+    <color name="colorGrey400">#bdbdbd</color>
+    <color name="colorGrey300">#e0e0e0</color>
+
+
+    <color name="colorYellow500">#ffeb3b</color>
+    <color name="colorYellow400">#ffee58</color>
+
+    <color name="colorRed500">#f44336</color>
+    <color name="colorRed400">#ef5350</color>
+
+
+
 
 </resources>

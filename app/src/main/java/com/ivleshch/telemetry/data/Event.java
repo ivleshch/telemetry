@@ -1,6 +1,6 @@
 package com.ivleshch.telemetry.data;
 
-import java.util.Date;
+import com.google.gson.annotations.SerializedName;
 
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
@@ -12,41 +12,39 @@ import io.realm.annotations.PrimaryKey;
 public class Event extends RealmObject {
 
     @PrimaryKey
-    private Integer id;
-    private Date    date;
+    @SerializedName("UID")
+    private String uid;
+    @SerializedName("DATE")
+    private Long date;
+    @SerializedName("QUANTITY")
     private Integer count;
-    private Device device;
-    private int deviceCode;
+    @SerializedName("WORK_CENTER")
+    private String workCenter;
 
-    public int getDeviceCode() {
-        return deviceCode;
+    public Event(){
+
     }
 
-    public void setDeviceCode(int deviceCode) {
-        this.deviceCode = deviceCode;
+    public Event(String uid, String date, String count, String workCenter) {
+        this.uid = uid;
+        this.date = Long.parseLong(date);
+        this.count = Integer.parseInt(count);
+        this.workCenter = workCenter;
     }
 
-    public Device getDevice() {
-        return device;
+    public String getUid() {
+        return uid;
     }
 
-    public void setDevice(Device device) {
-        this.device = device;
+    public void setUid(String uid) {
+        this.uid = uid;
     }
 
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public Date getDate() {
+    public Long getDate() {
         return date;
     }
 
-    public void setDate(Date date) {
+    public void setDate(Long date) {
         this.date = date;
     }
 
@@ -56,5 +54,13 @@ public class Event extends RealmObject {
 
     public void setCount(Integer count) {
         this.count = count;
+    }
+
+    public String getWorkCenter() {
+        return workCenter;
+    }
+
+    public void setWorkCenter(String workCenter) {
+        this.workCenter = workCenter;
     }
 }

@@ -3,32 +3,45 @@ package com.ivleshch.telemetry.data;
 import android.os.AsyncTask;
 import android.util.Log;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 import com.ivleshch.telemetry.AsyncResponse;
 import com.ivleshch.telemetry.Constants;
 import com.ivleshch.telemetry.Utils;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.ksoap2.HeaderProperty;
+import org.ksoap2.serialization.SoapObject;
+import org.ksoap2.serialization.SoapPrimitive;
+import org.ksoap2.serialization.SoapSerializationEnvelope;
+import org.ksoap2.transport.HttpTransportSE;
+
+import java.lang.reflect.Type;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
 
 import io.realm.Realm;
+import io.realm.RealmResults;
+
+import static org.apache.commons.lang3.math.NumberUtils.max;
 
 /**
  * Created by Ivleshch on 11.01.2018.
  */
-public class DbHelper extends AsyncTask<Date, String, Integer> {
+public class DbHelper extends AsyncTask<GetDataParams, String, Integer> {
 
-    private Connection connect  = null;
-    private Statement statement = null;
-    private ResultSet resultSet = null;
     private Realm realm;
     private String startDateOfShiftSQL, endDateOfShiftSQL,startTimeOfShiftSQL,endTimeOfShiftSQL;
     private Long startDateOfShiftUnix, endDateOfShiftUnix;
+    private Date startOfShift, endOfShift, currentDate;
     public AsyncResponse delegate = null;
+    private boolean isEventsStopsLoaded, updateReport;
+    private Long lastDateEvent, lastDateStop;
 
     @Override
     protected void onPreExecute() {
@@ -41,210 +54,438 @@ public class DbHelper extends AsyncTask<Date, String, Integer> {
     }
 
     @Override
-    protected Integer doInBackground(Date... params) {
+    protected Integer doInBackground(GetDataParams... params) {
 
         boolean asyncTaskFinished = false;
-        boolean isTimer = false;
+        boolean isTimer = params[0].timer;
+        updateReport = params[0].updateReport;
+
+        isEventsStopsLoaded = false;
+
+        checkWebServiceAvailability();
         try {
+
+            currentDate = Utils.currentDate();
+
+            startOfShift = params[0].startOfShift;
+            endOfShift = params[0].endOfShift;
+
+            startDateOfShiftSQL = Utils.dateSQL(params[0].startOfShift);
+            startTimeOfShiftSQL = Utils.timeSQL(params[0].startOfShift);
+
+            endDateOfShiftSQL = Utils.dateSQL(params[0].endOfShift);
+            endTimeOfShiftSQL = Utils.timeSQL(params[0].endOfShift);
+
+            startDateOfShiftUnix = params[0].startOfShift.getTime()/1000L;
+            endDateOfShiftUnix   = params[0].endOfShift.getTime()/1000L;
+
+            Gson gson = new Gson();
+
+            DbJson dbJson = new DbJson(startDateOfShiftUnix,endDateOfShiftUnix,updateReport);
+
+            String json = gson.toJson(dbJson);
 
             if(params.length==Constants.TIMER_RUN_ASYNC){
                 isTimer = true;
             }
-            startDateOfShiftSQL = Utils.dateSQL(params[0]);
-            startTimeOfShiftSQL = Utils.timeSQL(params[0]);
 
-            endDateOfShiftSQL = Utils.dateSQL(params[1]);
-            endTimeOfShiftSQL = Utils.timeSQL(params[1]);
+            if (!checkWebServiceAvailability()){
+                return returnResult(isTimer,asyncTaskFinished);
+            }
 
-            startDateOfShiftUnix = params[0].getTime()/1000L;
-            endDateOfShiftUnix   = params[1].getTime()/1000L;
+            SoapPrimitive response = null;
 
-            Class.forName(DbContract.DATABASE_DRIVER);
+            SoapObject request = new SoapObject(DbContract.NAMESPACE, DbContract.METHOD_NAME_REPORT);
+            request.addProperty("Date", json);
+            SoapSerializationEnvelope envelope = new SoapSerializationEnvelope(11);
+            envelope.dotNet = true;
+            envelope.setOutputSoapObject(request);
 
-            DriverManager.setLoginTimeout(2);
-            connect = DriverManager.getConnection("jdbc:mysql://"
-                                                    + DbContract.DATABASE_SERVER+"/"
-                                                    + DbContract.DATABASE_NAME+"?"
-                                                    + "user="+DbContract.DATABASE_USER
-                                                    +"&password="+DbContract.DATABASE_PASSWORD);
+//            HttpTransportSE httpse = new HttpTransportSE(Constants.URL,300000);
+            HttpTransportSE httpse = new HttpTransportSE(DbContract.URL);
+            ArrayList<HeaderProperty> headerList = new ArrayList<HeaderProperty>();
+            headerList.add(new HeaderProperty(DbContract.HEADER_TYPE, DbContract.HEADER_DATA));
+            try {
+                httpse.call(DbContract.SOAP_ACTION + DbContract.METHOD_NAME_REPORT, envelope, headerList);
+                response = (SoapPrimitive) envelope.getResponse();
 
-            statement = connect.createStatement();
+                if (response == null) {
+                    return returnResult(isTimer,asyncTaskFinished);
+                }
 
-            String query;
+                loadData(response);
 
-            query = DbContract.DATABASE_TABLE_REASONS_GET;
-            resultSet = statement.executeQuery(query);
-            writeResultSet(resultSet,DbContract.DATABASE_TABLE_REASONS_ID);
-
-            query = DbContract.DATABASE_TABLE_DEVISES_GET;
-            resultSet = statement.executeQuery(query);
-            writeResultSet(resultSet,DbContract.DATABASE_TABLE_DEVICES_ID);
-
-            query = DbContract.DATABASE_TABLE_RAW_EVENTS_GET;
-            resultSet = statement.executeQuery(String.format(query,startDateOfShiftSQL+startTimeOfShiftSQL,endDateOfShiftSQL+endTimeOfShiftSQL));
-            writeResultSet(resultSet,DbContract.DATABASE_TABLE_RAW_EVENTS_ID);
-
-            query = DbContract.DATABASE_TABLE_STOPS_GET;
-            resultSet = statement.executeQuery(String.format(query,startDateOfShiftUnix,endDateOfShiftUnix));
-            writeResultSet(resultSet,DbContract.DATABASE_TABLE_STOPS_ID);
+            } catch (Exception e) {
+                int a= 2;
+                a=5;
+            }
 
             asyncTaskFinished = true;
 
         } catch (Exception e) {
             Log.w("Error connection", "" + e.getMessage());
-            close();
         } finally {
-            close();
         }
-        if(!isTimer){
-            if (asyncTaskFinished){
+
+         return returnResult(isTimer,asyncTaskFinished);
+
+    }
+
+    private void loadData(SoapPrimitive response){
+
+        JSONArray exchangeObjects;
+        exchangeObjects = null;
+
+        try {
+            exchangeObjects = (new JSONArray(response.getValue().toString()));
+
+            for (int i = 0; i < exchangeObjects.length(); i++) {
+//                try{
+                    JSONObject exchangeObject = exchangeObjects.getJSONObject(i);
+
+                    switch (exchangeObject.getString(DbContract.DATABASE_TYPE)) {
+                        case DbContract.DATABASE_TYPE_CATALOG_NOMENCLATURE:
+                            loadNomenclature(exchangeObject.getJSONArray(DbContract.DATABASE_DATA));
+                            break;
+                        case DbContract.DATABASE_TYPE_CATALOG_INDIVIDUAL:
+                            loadIndividual(exchangeObject.getJSONArray(DbContract.DATABASE_DATA));
+                            break;
+                        case DbContract.DATABASE_TYPE_CATALOG_WORK_CENTER:
+                            loadWorkCenter(exchangeObject.getJSONArray(DbContract.DATABASE_DATA));
+                            break;
+                        case DbContract.DATABASE_TYPE_DOCUMENT_REPORT_FOR_SHIFT:
+                            loadReportForShift(exchangeObject.getJSONArray(DbContract.DATABASE_DATA));
+                            break;
+                        case DbContract.DATABASE_TYPE_CATALOG_SHIFT:
+                            loadShift(exchangeObject.getJSONArray(DbContract.DATABASE_DATA));
+                            break;
+                        case DbContract.DATABASE_TYPE_INFOREG_RAW_EVENT:
+                            loadRawEvent(exchangeObject.getJSONArray(DbContract.DATABASE_DATA));
+                            break;
+                        case DbContract.DATABASE_TYPE_INFOREG_STOP:
+                            loadStop(exchangeObject.getJSONArray(DbContract.DATABASE_DATA));
+                            break;
+                        default:
+                            break;
+                    }
+//                } catch (JSONException e){
+//                }
+
+            }
+            lastUpdateSave();
+
+        } catch (JSONException e) {
+        }
+
+    }
+
+    private void lastUpdateSave(){
+
+        if(isEventsStopsLoaded && (lastDateStop!=null || lastDateEvent!=null) ){
+            if(lastDateStop==null){
+                lastDateStop = (long) 0;
+            }
+            if(lastDateEvent==null){
+                lastDateEvent = (long) 0;
+            }
+
+            ShiftUpdate shiftUpdate = new ShiftUpdate();
+            shiftUpdate.setUid(Utils.dateStartOfDate(startOfShift).getTime());
+            shiftUpdate.setDate(Utils.dateStartOfDate(startOfShift));
+            shiftUpdate.setLastUpdate(Utils.dateFromUnix(max(lastDateEvent,lastDateStop)));
+
+            realm = Realm.getDefaultInstance();
+            realm.beginTransaction();
+            realm.insertOrUpdate(shiftUpdate);
+            realm.commitTransaction();
+            realm.close();
+        }
+    }
+
+    private void loadStop(JSONArray objectsArray)  throws JSONException{
+
+        final ArrayList<Stop> objectArrayList;
+
+        Type listType = new TypeToken<ArrayList<Stop>>(){}.getType();
+        GsonBuilder gsonBuilder = new GsonBuilder();
+        objectArrayList = gsonBuilder.create().fromJson(objectsArray.toString(), listType);
+
+        if (objectArrayList.size()>0){
+
+            realm = Realm.getDefaultInstance();
+            realm.beginTransaction();
+            realm.insertOrUpdate(objectArrayList);
+            realm.commitTransaction();
+            realm.close();
+
+            isEventsStopsLoaded = true;
+            lastDateStop = objectArrayList.get(objectArrayList.size()-1).getDate();
+        }
+
+    }
+
+    private void loadRawEvent(JSONArray objectsArray)  throws JSONException{
+
+        final ArrayList<Event> objectArrayList;
+
+        Type listType = new TypeToken<ArrayList<Event>>(){}.getType();
+        GsonBuilder gsonBuilder = new GsonBuilder();
+        objectArrayList = gsonBuilder.create().fromJson(objectsArray.toString(), listType);
+
+        if (objectArrayList.size()>0){
+
+            realm = Realm.getDefaultInstance();
+            realm.beginTransaction();
+            realm.insertOrUpdate(objectArrayList);
+            realm.commitTransaction();
+            realm.close();
+
+            isEventsStopsLoaded = true;
+            lastDateEvent = objectArrayList.get(objectArrayList.size()-1).getDate();
+        }
+
+    }
+
+    private void loadShift(JSONArray objectsArray) throws JSONException{
+
+        final ArrayList<Shift> objectArrayList;
+
+        JSONObject exchangeObject;
+
+        objectArrayList = new ArrayList<>();
+
+        exchangeObject = null;
+
+        for (int i = 0; i < objectsArray.length(); i++) {
+            exchangeObject = objectsArray.getJSONObject(i);
+
+            Shift shift = new Shift();
+
+            shift.setUid           (exchangeObject.getString("UID"));
+            shift.setDate          (Utils.dateFromUnix(exchangeObject.getLong("DATE")));
+            shift.setStartOfShift  (Utils.dateFromUnix(exchangeObject.getLong("START_OF_SHIFT")));
+            shift.setEndOfShift    (Utils.dateFromUnix(exchangeObject.getLong("END_OF_SHIFT")));
+
+            objectArrayList.add(shift);
+
+            realm = Realm.getDefaultInstance();
+            realm.beginTransaction();
+            RealmResults<Shift> result = realm.where(Shift.class)
+                    .equalTo("date",shift.getDate())
+                    .findAll();
+            result.deleteAllFromRealm();
+            realm.commitTransaction();
+            realm.close();
+        }
+
+        if (objectArrayList.size()>0){
+            realm = Realm.getDefaultInstance();
+            realm.beginTransaction();
+            realm.insertOrUpdate(objectArrayList);
+            realm.commitTransaction();
+            realm.close();
+        }
+
+    }
+
+    private void loadNomenclature(JSONArray objectsArray) throws JSONException{
+        final ArrayList<Nomenclature> objectArrayList;
+        objectArrayList = new ArrayList<>();
+        JSONObject exchangeObject;
+        exchangeObject = null;
+        for (int i = 0; i < objectsArray.length(); i++) {
+            exchangeObject = objectsArray.getJSONObject(i);
+
+            Nomenclature nomenclature = new Nomenclature();
+
+            nomenclature.setUid             (exchangeObject.getString("UID"));
+            nomenclature.setDeletionMark    (Utils.booleanFromInt(exchangeObject.getInt("DELETION_MARK")));
+            nomenclature.setDescription     (exchangeObject.getString("DESCRIPTION"));
+
+
+            objectArrayList.add(nomenclature);
+        }
+
+        if (objectArrayList.size()>0){
+            realm = Realm.getDefaultInstance();
+            realm.beginTransaction();
+            realm.insertOrUpdate(objectArrayList);
+            realm.commitTransaction();
+            realm.close();
+        }
+
+    }
+
+    private void loadIndividual(JSONArray objectsArray) throws JSONException{
+        final ArrayList<Individual> objectArrayList;
+        objectArrayList = new ArrayList<>();
+        JSONObject exchangeObject;
+        exchangeObject = null;
+        for (int i = 0; i < objectsArray.length(); i++) {
+            exchangeObject = objectsArray.getJSONObject(i);
+
+            Individual individual = new Individual();
+
+            individual.setUid             (exchangeObject.getString("UID"));
+            individual.setDeletionMark    (Utils.booleanFromInt(exchangeObject.getInt("DELETION_MARK")));
+            individual.setDescription     (exchangeObject.getString("DESCRIPTION"));
+            individual.setDescriptionShort(exchangeObject.getString("DESCRIPTION_SHORT"));
+
+
+            objectArrayList.add(individual);
+        }
+
+        if (objectArrayList.size()>0){
+            realm = Realm.getDefaultInstance();
+            realm.beginTransaction();
+            realm.insertOrUpdate(objectArrayList);
+            realm.commitTransaction();
+            realm.close();
+        }
+
+    }
+
+    private void loadWorkCenter(JSONArray objectsArray) throws JSONException{
+        final ArrayList<WorkCenter> objectArrayList;
+        objectArrayList = new ArrayList<>();
+        JSONObject exchangeObject;
+        exchangeObject = null;
+        for (int i = 0; i < objectsArray.length(); i++) {
+            exchangeObject = objectsArray.getJSONObject(i);
+
+            WorkCenter workCenter = new WorkCenter();
+
+            workCenter.setUid             (exchangeObject.getString("UID"));
+            workCenter.setDeletionMark    (Utils.booleanFromInt(exchangeObject.getInt("DELETION_MARK")));
+            workCenter.setDescription     (exchangeObject.getString("DESCRIPTION"));
+
+
+            objectArrayList.add(workCenter);
+        }
+
+        if (objectArrayList.size()>0){
+            realm = Realm.getDefaultInstance();
+            realm.beginTransaction();
+            realm.insertOrUpdate(objectArrayList);
+            realm.commitTransaction();
+            realm.close();
+        }
+
+    }
+
+    private void loadReportForShift(JSONArray objectsArray) throws JSONException{
+
+        final ArrayList<ReportForShift> objectArrayList;
+        final ArrayList<ReportForShiftProduct> objectArrayListProducts;
+
+        JSONObject exchangeObject, exchangeObjectTable;
+        JSONArray JSONArrayProducts;
+
+        objectArrayList = new ArrayList<>();
+        objectArrayListProducts = new ArrayList<>();
+
+
+        exchangeObject = null;
+        exchangeObjectTable = null;
+
+        for (int i = 0; i < objectsArray.length(); i++) {
+            exchangeObject = objectsArray.getJSONObject(i);
+
+            ReportForShift reportForShift = new ReportForShift();
+
+            reportForShift.setUid             (exchangeObject.getString("UID"));
+            reportForShift.setDeletionMark    (Utils.booleanFromInt(exchangeObject.getInt("DELETION_MARK")));
+            reportForShift.setFinished        (Utils.booleanFromInt(exchangeObject.getInt("FINISHED")));
+            reportForShift.setShiftMaster     (Individual.findObject(exchangeObject.getString("INDIVIDUAL")));
+            reportForShift.setWorkCenter      (WorkCenter.findObject(exchangeObject.getString("WORK_CENTER")));
+
+            reportForShift.setStartOfShift    (Utils.dateFromUnix(exchangeObject.getLong("START_OF_SHIFT")));
+            reportForShift.setEndOfShift      (Utils.dateFromUnix(exchangeObject.getLong("END_OF_SHIFT")));
+
+            objectArrayList.add(reportForShift);
+
+            realm = Realm.getDefaultInstance();
+            realm.beginTransaction();
+            RealmResults<ReportForShiftProduct> result = realm.where(ReportForShiftProduct.class)
+                    .equalTo("uidDocument",reportForShift.getUid())
+                    .findAll();
+            result.deleteAllFromRealm();
+            realm.commitTransaction();
+            realm.close();
+
+            JSONArrayProducts = exchangeObject.getJSONArray("PRODUCTS");
+            for (int id = 0; id < JSONArrayProducts.length(); id++) {
+                exchangeObjectTable = JSONArrayProducts.getJSONObject(id);
+
+                ReportForShiftProduct reportForShiftProduct = new ReportForShiftProduct();
+
+                reportForShiftProduct.setUid            (exchangeObjectTable.getString("UID"));
+                reportForShiftProduct.setUidDocument    (exchangeObject.getString("UID"));
+                reportForShiftProduct.setNomenclature   (Nomenclature.findObject(exchangeObjectTable.getString("NOMENCLATURE")));
+                reportForShiftProduct.setQuantityPlan   (exchangeObjectTable.getInt("QUANTITY_PLAN"));
+                reportForShiftProduct.setQuantityFact   (exchangeObjectTable.getInt("QUANTITY_FACT"));
+                reportForShiftProduct.setQuantityDefect (exchangeObjectTable.getInt("QUANTITY_DEFECT"));
+                reportForShiftProduct.setQuantityWaste  (exchangeObjectTable.getInt("QUANTITY_WASTE"));
+                reportForShiftProduct.setStandardSpeed  (exchangeObjectTable.getInt("STANDARD_SPEED"));
+                reportForShiftProduct.setUnitQuantity   (exchangeObjectTable.getString("UNIT_QUANTITY"));
+                reportForShiftProduct.setUnitWeight     (exchangeObjectTable.getString("UNIT_WEIGHT"));
+
+                reportForShiftProduct.setAvailability   (exchangeObjectTable.getInt("AVAILABILITY"));
+                reportForShiftProduct.setPerformance    (exchangeObjectTable.getInt("PERFORMANCE"));
+                reportForShiftProduct.setQuality        (exchangeObjectTable.getInt("QUALITY"));
+                reportForShiftProduct.setOee            (exchangeObjectTable.getInt("OEE"));
+
+                objectArrayListProducts.add(reportForShiftProduct);
+
+            }
+
+        }
+
+        if (objectArrayList.size()>0){
+            realm = Realm.getDefaultInstance();
+            realm.beginTransaction();
+            realm.insertOrUpdate(objectArrayList);
+            realm.insertOrUpdate(objectArrayListProducts);
+            realm.commitTransaction();
+            realm.close();
+        }
+
+    }
+
+    private Integer returnResult(boolean timer, boolean finished){
+        if(!timer){
+            if (finished){
                 return Constants.ASYNC_TASK_RESULT_SUCCESSFUL;
             } else{
                 return Constants.ASYNC_TASK_RESULT_FAILED;
             }
         } else{
-            if (asyncTaskFinished){
+            if (finished){
                 return Constants.TIMER_ASYNC_TASK_RESULT_SUCCESSFUL;
             } else{
                 return Constants.TIMER_ASYNC_TASK_RESULT_FAILED;
             }
         }
-
     }
 
-    private void close() {
+    private boolean checkWebServiceAvailability(){
+
         try {
-            if (resultSet != null) {
-                resultSet.close();
-            }
+            URL url = new URL(DbContract.CHECK_URL);
+            HttpURLConnection urlConnect = (HttpURLConnection) url.openConnection();
+            urlConnect.setRequestProperty(DbContract.REQUEST_PROPERTY_CONNECTION, DbContract.REQUEST_PROPERTY_CLOSE);
+            urlConnect.setConnectTimeout(DbContract.REQUEST_TIMEOUT); // Timeout 2 seconds.
+            urlConnect.connect();
 
-            if (statement != null) {
-                statement.close();
-            }
+            urlConnect.disconnect();
 
-            if (connect != null) {
-                connect.close();
-            }
-        } catch (Exception e) {
+            return true;
 
+        }catch (Exception e){
+            return false;
         }
+
     }
-
-    private void writeResultSet(ResultSet resultSet, Integer tableId) throws SQLException {
-        switch (tableId){
-            case 1: //DATABASE_TABLE_REASONS
-                saveToRealmReasons(resultSet);
-                break;
-            case 2://DATABASE_TABLE_RAW_EVENTS
-                saveToRealmEvents(resultSet);
-                break;
-            case 3://DATABASE_TABLE_STOPS
-                saveToRealmStops(resultSet);
-                break;
-            case 4://DATABASE_TABLE_DEVICES
-                saveToRealmDevices(resultSet);
-                break;
-            default:
-                break;
-        }
-    }
-
-    private void saveToRealmReasons(ResultSet resultSet)  throws SQLException{
-
-        ArrayList<Reason> objectArrayList = new ArrayList<>();
-
-        while (resultSet.next()) {
-            Reason reason = new Reason();
-            reason.setId(resultSet.getInt(DbContract.DATABASE_TABLE_REASONS_COLUMN_ID));
-            reason.setCode(resultSet.getInt(DbContract.DATABASE_TABLE_REASONS_COLUMN_CODE));
-            reason.setReason(resultSet.getString(DbContract.DATABASE_TABLE_REASONS_COLUMN_REASON));
-
-            objectArrayList.add(reason);
-        }
-
-        if(objectArrayList.size()>0) {
-            realm = Realm.getDefaultInstance();
-            realm.beginTransaction();
-            realm.insertOrUpdate(objectArrayList);
-            realm.commitTransaction();
-            realm.close();
-        }
-    }
-
-    private void saveToRealmDevices(ResultSet resultSet)  throws SQLException{
-
-        ArrayList<Device> objectArrayList = new ArrayList<>();
-
-        while (resultSet.next()) {
-            Device device = new Device();
-            device.setDevice_uuid(resultSet.getString(DbContract.DATABASE_TABLE_DEVICES_COLUMN_UUID));
-            device.setId(resultSet.getInt(DbContract.DATABASE_TABLE_DEVICES_COLUMN_ID));
-            device.setDevice_name(resultSet.getString(DbContract.DATABASE_TABLE_DEVICES_COLUMN_DEVICE_NAME));
-
-            objectArrayList.add(device);
-        }
-
-        if(objectArrayList.size()>0) {
-            realm = Realm.getDefaultInstance();
-            realm.beginTransaction();
-            realm.insertOrUpdate(objectArrayList);
-            realm.commitTransaction();
-            realm.close();
-        }
-    }
-
-    private void saveToRealmEvents(ResultSet resultSet)  throws SQLException{
-
-        ArrayList<Event> objectArrayList = new ArrayList<>();
-
-        while (resultSet.next()) {
-            Event event = new Event();
-            event.setId(resultSet.getInt(DbContract.DATABASE_TABLE_RAW_EVENTS_COLUMN_ID));
-            event.setDate(Utils.dateFromDateTime(resultSet.getDate(DbContract.DATABASE_TABLE_RAW_EVENTS_COLUMN_DATE),
-                                                resultSet.getTime(DbContract.DATABASE_TABLE_RAW_EVENTS_COLUMN_TIME)));
-            event.setCount(resultSet.getInt(DbContract.DATABASE_TABLE_RAW_EVENTS_COLUMN_COUNT));
-            event.setDevice(Device.findObject(resultSet.getInt(DbContract.DATABASE_TABLE_RAW_EVENTS_COLUMN_DEVICE)));
-            event.setDeviceCode(resultSet.getInt(DbContract.DATABASE_TABLE_RAW_EVENTS_COLUMN_DEVICE));
-
-            objectArrayList.add(event);
-        }
-
-        if(objectArrayList.size()>0) {
-            realm = Realm.getDefaultInstance();
-            realm.beginTransaction();
-            realm.insertOrUpdate(objectArrayList);
-            realm.commitTransaction();
-            realm.close();
-        }
-    }
-
-    private void saveToRealmStops(ResultSet resultSet)  throws SQLException{
-
-        ArrayList<Stop> objectArrayList = new ArrayList<>();
-
-        while (resultSet.next()) {
-            Stop stop = new Stop();
-            stop.setId(resultSet.getInt(DbContract.DATABASE_TABLE_STOPS_COLUMN_ID));
-            stop.setDuration(resultSet.getInt(DbContract.DATABASE_TABLE_STOPS_COLUMN_DURATION));
-            stop.setReason(Reason.findObject(resultSet.getInt(DbContract.DATABASE_TABLE_STOPS_COLUMN_REASON)));
-            stop.setReasonCode(resultSet.getInt(DbContract.DATABASE_TABLE_STOPS_COLUMN_REASON));
-            stop.setDate(Utils.dateFromUnix(resultSet.getLong(DbContract.DATABASE_TABLE_STOPS_COLUMN_MOMENT)));
-            stop.setDevice(Device.findObject(resultSet.getInt(DbContract.DATABASE_TABLE_STOPS_COLUMN_DEVICE)));
-            stop.setDeviceCode(resultSet.getInt(DbContract.DATABASE_TABLE_STOPS_COLUMN_DEVICE));
-
-
-            objectArrayList.add(stop);
-        }
-
-        if(objectArrayList.size()>0) {
-            realm = Realm.getDefaultInstance();
-            realm.beginTransaction();
-            realm.insertOrUpdate(objectArrayList);
-            realm.commitTransaction();
-            realm.close();
-        }
-    }
-
 
 
 }

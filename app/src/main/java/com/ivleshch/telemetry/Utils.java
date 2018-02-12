@@ -1,6 +1,23 @@
 package com.ivleshch.telemetry;
 
+import android.support.v4.content.ContextCompat;
+import android.view.View;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+
+import com.ivleshch.telemetry.data.Event;
+import com.ivleshch.telemetry.data.LineInformation;
+import com.ivleshch.telemetry.data.ReportForShift;
+import com.ivleshch.telemetry.data.ReportForShiftProduct;
+import com.ivleshch.telemetry.data.Shift;
+import com.ivleshch.telemetry.data.Stop;
+
+import org.joda.time.Duration;
+
 import java.sql.Time;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
@@ -13,11 +30,19 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import io.realm.Realm;
+import io.realm.RealmQuery;
+import io.realm.RealmResults;
+
 /**
  * Created by Ivleshch on 11.01.2018.
  */
 
 public class Utils {
+
+    public static boolean booleanFromInt(int value){
+        return (value != 0);
+    }
 
     public static Date dateFromDateTime(Date date, Time time){
         Calendar cal = Calendar.getInstance();
@@ -201,6 +226,40 @@ public class Utils {
 
     }
 
+//    public static Date getEndOfShift(Date date){
+//
+////        int year, month, day, hour, minute;
+////
+////        Calendar calendarEnd = Calendar.getInstance();
+////        Calendar currentTime = Calendar.getInstance();
+////
+////        calendarEnd.setTime(date);
+////        if(!calendarEnd.getTime().before(currentTime.getTime())){
+////                year = currentTime.get(Calendar.YEAR);
+////                month = currentTime.get(Calendar.MONTH);
+////                day = currentTime.get(Calendar.DAY_OF_MONTH);
+////
+////                hour = currentTime.get(Calendar.HOUR_OF_DAY);
+////                minute = currentTime.get(Calendar.MINUTE);
+////            }else{
+////                hour   = 8;
+////                minute = 0;
+////                oneDauShift = false;
+////            }
+////
+////        }
+////
+////        cal.set(year,month,day,hour,minute,0);
+////
+////        if(!oneDauShift){
+////            cal.add(Calendar.DATE,1);
+////        }
+////
+////        cal.set(Calendar.MILLISECOND,0);
+////
+////        return cal.getTime();
+//    }
+
     public static boolean dateToday(Date date){
         Calendar cal = Calendar.getInstance();
 
@@ -215,6 +274,20 @@ public class Utils {
         else{
             return true;
         }
+    }
+
+    public static Date dateStartOfDate(Date date){
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(date);
+
+        // set the calendar to start of today
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+
+        return cal.getTime();
+
     }
 
     public static Date currentDate() {
@@ -301,8 +374,387 @@ public class Utils {
         int minutes = totalMinutes % MINUTES_IN_AN_HOUR;
         int hours = totalMinutes / MINUTES_IN_AN_HOUR;
 
-        return hours + "h." + minutes + " m.";
+        return hours + "ч." + minutes + " м.";
     }
 
+    public static String formatShift(Date date, Date startOfShift, Date endOfShift){
+
+        SimpleDateFormat simpleDateFormatDate = new SimpleDateFormat("dd.MM.yyyy");
+        SimpleDateFormat simpleDateFormatHourMinute = new SimpleDateFormat("HH:mm");
+
+        return simpleDateFormatDate.format(date)
+                + " "
+                + simpleDateFormatHourMinute.format(startOfShift)
+                + "-"
+                + simpleDateFormatHourMinute.format(endOfShift);
+
+    }
+
+    public static Shift findCurrentShift(List<Shift> shifts, boolean datePickerSelect, Date currentDateTime){
+
+        Date  key;
+        Shift value;
+        Shift shift;
+
+        value = null;
+        shift = null;
+
+        for(Shift shiftItem: shifts) {
+            value = shiftItem;
+            if(!datePickerSelect){
+                if(currentDateTime.after(value.getStartOfShift())
+                        && currentDateTime.before(value.getEndOfShift())){
+                    shift = value;
+                    break;
+                }
+            } else{
+                if(dateBetween(currentDateTime,value.getDate())){
+                    shift = value;
+                    break;
+                }
+            }
+        }
+        if(!datePickerSelect){
+            if (shift == null) {
+                shift = value;
+            }
+        }
+        return shift;
+
+    }
+
+    public static boolean dateBetween(Date date, Date dateStart){
+        Calendar calendarDate = Calendar.getInstance();
+        Calendar calendarDateStart = Calendar.getInstance();
+
+        calendarDate.setTime(date);
+        calendarDate.set(Calendar.HOUR_OF_DAY,0);
+        calendarDate.set(Calendar.MINUTE,0);
+        calendarDate.set(Calendar.SECOND,0);
+        calendarDate.set(Calendar.MILLISECOND,0);
+
+
+        calendarDateStart.setTime(dateStart);
+        calendarDateStart.set(Calendar.HOUR_OF_DAY,0);
+        calendarDateStart.set(Calendar.MINUTE,0);
+        calendarDateStart.set(Calendar.SECOND,0);
+        calendarDateStart.set(Calendar.MILLISECOND,0);
+
+        if(calendarDateStart.getTime().equals(calendarDate.getTime())){
+            return true;
+        } else{
+            return false;
+        }
+
+    }
+
+    public static int findCurrentShiftIndex(Shift shift,List<Shift> shifts){
+
+        if(shift==null){
+            return 0;
+        }
+
+        Shift value;
+        int index;
+
+        index = 0;
+        value=null;
+
+        for(Shift shiftItem:shifts) {
+            value = shiftItem;
+
+            if(shift.equals(value)){
+                break;
+            }
+            index++;
+        }
+
+        return index;
+
+    }
+
+    public static int percentColor(int percent){
+        if(percent>=Constants.PERCENT_COLOR_GRREN){
+            return R.color.colorGreen400;
+        } else if(Constants.PERCENT_COLOR_YELLOW <=percent && percent<Constants.PERCENT_COLOR_GRREN){
+            return R.color.colorYellow400;
+        }else if(0<=percent && percent<Constants.PERCENT_COLOR_YELLOW){
+            return R.color.colorRed400;
+        } else{
+            return R.color.colorGrey400;
+        }
+    }
+
+    public static ArrayList<LineInformation> getLines(Date startOfShift, Date endOfShift, String uidWorkCenter, String uidNomenclature){
+
+        HashMap<Integer,Integer> hmDuration;
+        HashMap<Integer,Integer> hmDurationSorted;
+        HashMap<Integer,String> hmStops;
+        Duration shiftDuration;
+        long shiftDurationSeconds,shiftDurationHours;
+        int quantityEvents;
+        int stopDuration, quantityStops, mainStopDuration;
+        String durationStops, mainReasonStop;
+        double avaibilityPercent, performancePercent, qualityPercent, oeePercent, stopsPersent, mainStopPercent;
+        ArrayList<LineInformation> lines;
+
+        lines = new ArrayList<LineInformation>();
+        lines.clear();
+
+        hmDuration = new HashMap<>();
+        hmDuration.clear();
+
+        hmDurationSorted = new HashMap<>();
+        hmDurationSorted.clear();
+
+        hmStops = new HashMap<>();
+        hmStops.clear();
+
+        Realm lineRealm;
+        lineRealm = Realm.getDefaultInstance();
+        lineRealm.refresh();
+
+        hmDuration.clear();
+        hmDurationSorted.clear();
+        hmStops.clear();
+
+
+        RealmQuery<ReportForShift> reportForShiftRealmQuery = lineRealm.where(ReportForShift.class).beginGroup();
+        if (uidWorkCenter!=null) {
+            reportForShiftRealmQuery.equalTo("workCenter.uid",uidWorkCenter);
+        } else {
+            reportForShiftRealmQuery.isNotNull("workCenter.uid");
+        }
+
+        reportForShiftRealmQuery.equalTo("startOfShift",startOfShift);
+        reportForShiftRealmQuery.equalTo("endOfShift",endOfShift);
+
+        RealmResults<ReportForShift> reportForShifts = reportForShiftRealmQuery.endGroup().findAll();
+
+        for(ReportForShift reportForShift:reportForShifts){
+
+
+            RealmQuery<ReportForShiftProduct> reportForShiftProductRealmQuery = lineRealm.where(ReportForShiftProduct.class).beginGroup();
+            if (uidNomenclature!=null) {
+                reportForShiftProductRealmQuery.equalTo("nomenclature.uid",uidNomenclature);
+            } else {
+                reportForShiftProductRealmQuery.isNotNull("nomenclature.uid");
+            }
+
+            reportForShiftProductRealmQuery.equalTo("uidDocument",reportForShift.getUid());
+
+            RealmResults<ReportForShiftProduct> reportForShiftsProducts = reportForShiftProductRealmQuery.endGroup().findAll();
+
+            RealmResults<Stop> stops = lineRealm.where(Stop.class)
+                    .greaterThanOrEqualTo("date",UnixTime(startOfShift))
+                    .lessThan("date",UnixTime(endOfShift))
+                    .equalTo("workCenter",reportForShift.getWorkCenter().getUid())
+                    .findAll();
+
+            RealmResults<Event> events = lineRealm.where(Event.class)
+                    .greaterThanOrEqualTo("date",UnixTime(startOfShift))
+                    .lessThan("date",UnixTime(endOfShift))
+                    .equalTo("workCenter",reportForShift.getWorkCenter().getUid())
+                    .findAll();
+
+            quantityEvents = events.sum("count").intValue();
+            quantityStops = stops.size();
+
+            shiftDuration = new Duration(startOfShift.getTime(), endOfShift.getTime());
+            shiftDurationSeconds = shiftDuration.getStandardSeconds();
+            shiftDurationHours = shiftDuration.getStandardHours();
+
+            stopDuration = stops.sum("duration").intValue();
+
+            stopsPersent = Math.round((double) stopDuration/shiftDurationSeconds*100);
+
+            durationStops = Utils.timeConversion(stopDuration)+"/"+(int) stopsPersent+"%";
+
+            if(stops.size() == 0 ){
+                avaibilityPercent = -1;
+            } else{
+                avaibilityPercent = 100 - Math.round((double) stopDuration / shiftDurationSeconds * 100);
+            }
+
+
+            for (Stop stop : stops) {
+                if(hmDuration.get(stop.getReason())==null){
+                    hmDuration.put(stop.getReason(), stop.getDuration());
+                } else{
+                    hmDuration.put(stop.getReason(), hmDuration.get(stop.getReason())+stop.getDuration());
+                }
+
+                if(hmStops.get(stop.getReason())==null){
+                    hmStops.put(stop.getReason(), stop.getReasonDescription());
+                }
+            }
+
+            hmDurationSorted = Utils.sortByValues(hmDuration);
+            if (hmDurationSorted.size()>0){
+                mainReasonStop = hmStops.get(hmDurationSorted.entrySet().iterator().next().getKey());
+
+                mainStopDuration = hmDurationSorted.entrySet().iterator().next().getValue();
+                mainStopPercent =Math.round((double) mainStopDuration/shiftDurationSeconds*100);
+
+                if(mainReasonStop.equals("")){
+                    mainReasonStop = "Отсутствует описание";
+                }
+
+                mainReasonStop = mainReasonStop + " "+Utils.timeConversion(mainStopDuration)+"/"+(int) mainStopPercent+"%";
+            } else{
+                mainReasonStop = "";
+            }
+
+
+
+            for(ReportForShiftProduct reportForShiftProduct:reportForShiftsProducts){
+
+                if(reportForShift.getFinished()){
+                    qualityPercent = reportForShiftProduct.getQuality();
+                    oeePercent = reportForShiftProduct.getOee();
+                    avaibilityPercent = reportForShiftProduct.getAvailability();
+                    performancePercent = reportForShiftProduct.getPerformance();
+                } else{
+                    qualityPercent = -1;
+                    oeePercent = -1;
+                    if(quantityEvents==0){
+                        performancePercent = -1;
+                    } else{
+                        performancePercent = Math.round((double) quantityEvents / (reportForShiftProduct.getStandardSpeed()*shiftDurationHours) * 100);
+                    }
+                }
+
+                lines.add(new LineInformation(reportForShiftProduct.getUid(),
+                        lineRealm.copyFromRealm(reportForShift.getWorkCenter()),
+                        lineRealm.copyFromRealm(reportForShift.getShiftMaster()),
+                        lineRealm.copyFromRealm(reportForShiftProduct.getNomenclature()),
+                        reportForShiftProduct.getQuantityPlan(),
+                        (reportForShift.getFinished())? reportForShiftProduct.getQuantityFact()  : Constants.NO_DATA,
+                        (reportForShift.getFinished())? reportForShiftProduct.getQuantityDefect()  : Constants.NO_DATA,
+                        reportForShiftProduct.getQuantityWaste(),
+                        reportForShiftProduct.getUnitQuantity(),
+                        reportForShiftProduct.getUnitWeight(),
+                        reportForShiftProduct.getStandardSpeed(),
+                        (int)avaibilityPercent,
+                        (int) performancePercent,
+                        (int) qualityPercent,
+                        (int) oeePercent,
+                        quantityStops,
+                        durationStops,
+                        mainReasonStop));
+            }
+        }
+
+        lineRealm.close();
+    return lines;
+    }
+
+    public static Long UnixTime(Date date){
+        return date.getTime()/1000L;
+    }
+
+    public static void fillLineInformation(View view, LineInformation lineInformation){
+
+        TextView tvMaster,tvNomenclature,
+                tvQuantityPlan,tvQuantityFact,
+                tvQuantityDefect,tvQuantityWaste,
+                tvWorkCenter, tvAvailability,
+                tvPerformancePercent,tvQualityPercent,
+                tvOeePercent, tvQuantityStop,
+                tvDurationStop, tvReasonStop;
+        ImageView ivClockOee, ivClockQuality,ivClockQuantityDefect,ivClockQuantityFact,
+                ivClockPerformance, ivClockAvailability;
+        LinearLayout llOee, llavailability, llPerformance, llQuality;
+
+        tvMaster = (TextView) view.findViewById(R.id.tv_master);
+        tvNomenclature = (TextView) view.findViewById(R.id.tv_nomenclature);
+        tvQuantityPlan = (TextView) view.findViewById(R.id.tv_quantity_plan);
+        tvQuantityFact = (TextView) view.findViewById(R.id.tv_quantity_fact);
+        tvQuantityDefect = (TextView) view.findViewById(R.id.tv_quantity_defect);
+//        tvQuantityWaste = (TextView) view.findViewById(R.id.tv_quantity_waste);
+        tvWorkCenter = (TextView) view.findViewById(R.id.tv_work_center);
+        tvAvailability = (TextView) view.findViewById(R.id.tv_availability_percent);
+        tvPerformancePercent = (TextView) view.findViewById(R.id.tv_performance_percent);
+        tvQualityPercent = (TextView) view.findViewById(R.id.tv_quality_percent);
+        tvOeePercent = (TextView) view.findViewById(R.id.tv_oee_percent);
+        tvQuantityStop = (TextView) view.findViewById(R.id.tv_quantity_stop);
+        tvDurationStop = (TextView) view.findViewById(R.id.tv_duration_stop);
+        tvReasonStop = (TextView) view.findViewById(R.id.tv_reason_stop);
+
+        ivClockOee = (ImageView) view.findViewById(R.id.iv_clock_oee);
+        ivClockQuality = (ImageView) view.findViewById(R.id.iv_clock_quality);
+        ivClockQuantityDefect =(ImageView) view.findViewById(R.id.iv_clock_quantity_defect);
+        ivClockQuantityFact =(ImageView) view.findViewById(R.id.iv_clock_quantity_fact);
+        ivClockPerformance =(ImageView) view.findViewById(R.id.iv_clock_performance);
+        ivClockAvailability =(ImageView) view.findViewById(R.id.iv_clock_availability);
+
+        llOee = (LinearLayout) view.findViewById(R.id.ll_line_oee);
+        llavailability = (LinearLayout) view.findViewById(R.id.ll_line_availability);
+        llPerformance = (LinearLayout) view.findViewById(R.id.ll_line_performance);
+        llQuality = (LinearLayout) view.findViewById(R.id.ll_line_quality);
+
+        tvMaster.setText(lineInformation.getMaster().getDescriptionShort());
+        tvNomenclature.setText(lineInformation.getNomenclature().getDescription());
+        tvQuantityPlan.setText(lineInformation.getQuantityPlan().toString());
+        tvQuantityFact.setText(lineInformation.getQuantityFact().toString());
+        if(lineInformation.getQuantityFact().equals(Constants.NO_DATA)){
+            ivClockQuantityFact.setVisibility(View.VISIBLE);
+            tvQuantityFact.setVisibility(View.GONE);
+        }else{
+            ivClockQuantityFact.setVisibility(View.GONE);
+            tvQuantityFact.setVisibility(View.VISIBLE);
+        }
+        tvQuantityDefect.setText(lineInformation.getQuantityDefect().toString());
+        if(lineInformation.getQuantityDefect().equals(Constants.NO_DATA)){
+            ivClockQuantityDefect.setVisibility(View.VISIBLE);
+            tvQuantityDefect.setVisibility(View.GONE);
+        }else{
+            ivClockQuantityDefect.setVisibility(View.GONE);
+            tvQuantityDefect.setVisibility(View.VISIBLE);
+        }
+//        tvQuantityWaste.setText(lineInformation.getQuantityWaste().toString());
+        tvWorkCenter.setText(lineInformation.getWorkCenter().getDescription());
+        tvAvailability.setText(lineInformation.getAvailabilityPercent().toString()+"%");
+        if(lineInformation.getAvailabilityPercent().equals(Constants.NO_DATA)){
+            ivClockAvailability.setVisibility(View.VISIBLE);
+            tvAvailability.setVisibility(View.GONE);
+        }else{
+            ivClockAvailability.setVisibility(View.GONE);
+            tvAvailability.setVisibility(View.VISIBLE);
+        }
+        tvPerformancePercent.setText(lineInformation.getPerformancePercent().toString()+"%");
+        if(lineInformation.getPerformancePercent().equals(Constants.NO_DATA)){
+            ivClockPerformance.setVisibility(View.VISIBLE);
+            tvPerformancePercent.setVisibility(View.GONE);
+        }else{
+            ivClockPerformance.setVisibility(View.GONE);
+            tvPerformancePercent.setVisibility(View.VISIBLE);
+        }
+        tvQualityPercent.setText(lineInformation.getQualityPercent().toString()+"%");
+        if(lineInformation.getQualityPercent().equals(Constants.NO_DATA)){
+            ivClockQuality.setVisibility(View.VISIBLE);
+            tvQualityPercent.setVisibility(View.GONE);
+        }else{
+            ivClockQuality.setVisibility(View.GONE);
+            tvQualityPercent.setVisibility(View.VISIBLE);
+        }
+        tvOeePercent.setText(lineInformation.getOeePercent().toString()+"%");
+        if(lineInformation.getOeePercent().equals(Constants.NO_DATA)){
+            ivClockOee.setVisibility(View.VISIBLE);
+            tvOeePercent.setVisibility(View.GONE);
+        }else{
+            ivClockOee.setVisibility(View.GONE);
+            tvOeePercent.setVisibility(View.VISIBLE);
+        }
+
+        tvQuantityStop.setText(lineInformation.getQuantityStops().toString());
+        tvDurationStop.setText(lineInformation.getDurationStops().toString());
+        tvReasonStop.setText(lineInformation.getReasonDescription());
+
+        llOee.setBackgroundColor(ContextCompat.getColor(llOee.getContext(), Utils.percentColor(lineInformation.getOeePercent())));
+        llavailability.setBackgroundColor(ContextCompat.getColor(llOee.getContext(), Utils.percentColor(lineInformation.getAvailabilityPercent())));
+        llPerformance.setBackgroundColor(ContextCompat.getColor(llOee.getContext(), Utils.percentColor(lineInformation.getPerformancePercent())));
+        llQuality.setBackgroundColor(ContextCompat.getColor(llOee.getContext(), Utils.percentColor(lineInformation.getQualityPercent())));
+    }
 
 }
