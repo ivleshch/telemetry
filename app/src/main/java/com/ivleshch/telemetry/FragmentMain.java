@@ -361,6 +361,12 @@ public class FragmentMain extends BaseFragment implements
         YAxis rightYAxisBarChart = barChart.getAxisRight();
         rightYAxisBarChart.setEnabled(false);
 
+//        chart.setNoDataText("");
+//        barChart.setNoDataText("");
+
+//        chart.setNoDataText("");
+//        barChart.setNoDataText("");
+
     }
 
 
@@ -456,9 +462,35 @@ public class FragmentMain extends BaseFragment implements
                 barChart.setTouchEnabled(false);
 //                chart.setScaleXEnabled(false);
             }
+
+//           enableDisableCharts(false);
+            chart.clear();
+            barChart.clear();
+
             chartIsUpdaditing = true;
             GraphHelper graphHelper = new GraphHelper();
             graphHelper.execute();
+        }
+    }
+
+    private void enableDisableCharts(boolean flag){
+
+        chart.setTouchEnabled(flag);
+        chart.setHighlightPerTapEnabled(flag);
+        if(datasetStops!=null){
+            datasetStops.setHighlightEnabled(flag);
+        }
+        if(dataSet!=null){
+            dataSet.setHighlightEnabled(flag);
+        }
+
+        barChart.setTouchEnabled(flag);
+        barChart.setHighlightPerTapEnabled(flag);
+        if(barDataSet!=null){
+            barDataSet.setHighlightEnabled(flag);
+        }
+        if(barDataSetDuration!=null){
+            barDataSetDuration.setHighlightEnabled(flag);
         }
     }
 
@@ -484,12 +516,14 @@ public class FragmentMain extends BaseFragment implements
                 if(isTimer){
                     chart.notifyDataSetChanged();
                 }
+//                chart.setData(lineData);
+//                chart.notifyDataSetChanged();
                 chart.invalidate();
             } else{
                 chart.clear();
             }
             if (invalidateBarChart){
-
+                barChart.highlightValue(null);
                 if (updateZoom || !isTimer){
                     barChart.fitScreen();
                 }
@@ -507,6 +541,8 @@ public class FragmentMain extends BaseFragment implements
             }
             chartIsUpdaditing = false;
             updateOEE();
+
+//            enableDisableCharts(true);
         }
 
         @Override

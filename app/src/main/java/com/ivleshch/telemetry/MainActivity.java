@@ -53,7 +53,7 @@ import io.realm.Sort;
 public class MainActivity extends AppCompatActivity
         implements View.OnClickListener,
         NavigationView.OnNavigationItemSelectedListener,
-        AsyncResponse {
+        AsyncResponse{
 
     private Date startofShift, endOfShift;
     private TextView tvCurrentDate;
@@ -287,8 +287,11 @@ public class MainActivity extends AppCompatActivity
                 .setMaxScale(1.05f)
                 .setMinScale(0.8f)
                 .setPivotX(Pivot.X.CENTER) // CENTER is a default one
-                .setPivotY(Pivot.Y.BOTTOM) // CENTER is a default one
-                .build());
+                .setPivotY(Pivot.Y.BOTTOM)// CENTER is a default one
+                .build()
+        );
+
+
         scrollView.addOnItemChangedListener(new DiscreteScrollView.OnItemChangedListener<RecyclerView.ViewHolder>() {
             @Override
             public void onCurrentItemChanged(@Nullable RecyclerView.ViewHolder viewHolder, int adapterPosition) {
@@ -464,6 +467,10 @@ public class MainActivity extends AppCompatActivity
 
 
             }
+        }
+
+        if(uploadData){
+            updateReport = false;
         }
 
         if(uploadData || updateReport) {

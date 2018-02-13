@@ -121,6 +121,8 @@ public class AdapterShifts extends RecyclerView.Adapter<AdapterShifts.ShiftsView
 //            imageView.setImageDrawable(new ColorDrawable(item.getColor()));
         }
 
+
+
         @Override
         public void onClick(View v) {
 //            if (clickListener != null && !onlyRead) {

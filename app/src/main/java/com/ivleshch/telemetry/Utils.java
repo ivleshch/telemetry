@@ -379,14 +379,15 @@ public class Utils {
 
     public static String formatShift(Date date, Date startOfShift, Date endOfShift){
 
-        SimpleDateFormat simpleDateFormatDate = new SimpleDateFormat("dd.MM.yyyy");
+//        SimpleDateFormat simpleDateFormatDate = new SimpleDateFormat("dd.MM.yyyy");
+        SimpleDateFormat simpleDateFormatDate = new SimpleDateFormat("dd MMM EE");
         SimpleDateFormat simpleDateFormatHourMinute = new SimpleDateFormat("HH:mm");
 
         return simpleDateFormatDate.format(date)
                 + " "
-                + simpleDateFormatHourMinute.format(startOfShift)
-                + "-"
-                + simpleDateFormatHourMinute.format(endOfShift);
+                + simpleDateFormatHourMinute.format(startOfShift);
+//                + "-"
+//                + simpleDateFormatHourMinute.format(endOfShift);
 
     }
 
