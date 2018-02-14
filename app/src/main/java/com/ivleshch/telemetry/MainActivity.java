@@ -3,7 +3,10 @@ package com.ivleshch.telemetry;
 import android.app.DatePickerDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.NavigationView;
@@ -30,6 +33,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.ivleshch.telemetry.data.DbContract;
 import com.ivleshch.telemetry.data.DbHelper;
 import com.ivleshch.telemetry.data.GetDataParams;
 import com.ivleshch.telemetry.data.Shift;
@@ -216,19 +220,28 @@ public class MainActivity extends AppCompatActivity
 
         item.setChecked(true);
 
-        if (subMenu.findItem(selectedDevice)!=null){
-            subMenu.findItem(selectedDevice).setChecked(false);
+        switch (item.getItemId()){
+            case R.id.nav_settings:
+                Intent intent = new Intent(this, SettingsActivity.class);
+                startActivity(intent);
+                break;
+            default:
+                break;
         }
 
-        idDevice=item.getItemId();
+//        if (subMenu.findItem(selectedDevice)!=null){
+//            subMenu.findItem(selectedDevice).setChecked(false);
+//        }
 
-        selectedDevice = idDevice;
-        getData(false,false);
+//        idDevice=item.getItemId();
+
+//        selectedDevice = idDevice;
+//        getData(false,false);
 
 
         drawer.closeDrawers();
 
-        toolbar.setTitle(item.getTitle());
+//        toolbar.setTitle(item.getTitle());
 
         return false;
     }
@@ -239,6 +252,14 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        final SharedPreferences.Editor editor = sharedPreferences.edit();
+        if (sharedPreferences.getString(DbContract.SETTINGS_SERVER_KEY,"").equals("")){
+            editor.putString(DbContract.SETTINGS_SERVER_KEY, DbContract.SETTINGS_SERVER_VALUE).apply();
+        }
+        if (sharedPreferences.getString(DbContract.SETTINGS_WEBSERVICE_KEY,"").equals("")){
+            editor.putString(DbContract.SETTINGS_WEBSERVICE_KEY, DbContract.SETTINGS_WEBSERVICE_VALUE).apply();
+        }
 
         updateNearestDate = false;
         datePickerSelect = false;
@@ -342,8 +363,8 @@ public class MainActivity extends AppCompatActivity
 
         navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
-        menu = navigationView.getMenu();
-        subMenu = menu.addSubMenu(getString(R.string.subMenuTitle));
+//        menu = navigationView.getMenu();
+//        subMenu = menu.addSubMenu(getString(R.string.subMenuTitle));
 
 
         calendarCurrentDate = Calendar.getInstance();
@@ -474,7 +495,12 @@ public class MainActivity extends AppCompatActivity
         }
 
         if(uploadData || updateReport) {
-            GetDataParams params = new GetDataParams(startofShift, endOfShift, isTimer,updateReport);
+
+            final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+            String server  = sharedPreferences.getString(DbContract.SETTINGS_SERVER_KEY,"");
+            String webService = sharedPreferences.getString(DbContract.SETTINGS_WEBSERVICE_KEY,"");
+
+            GetDataParams params = new GetDataParams(startofShift, endOfShift, isTimer,updateReport,server,webService);
             DbHelper dbHelper = new DbHelper();
             dbHelper.delegate = this;
             dbHelper.execute(params);

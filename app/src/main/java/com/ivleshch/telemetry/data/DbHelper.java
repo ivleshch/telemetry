@@ -42,6 +42,7 @@ public class DbHelper extends AsyncTask<GetDataParams, String, Integer> {
     public AsyncResponse delegate = null;
     private boolean isEventsStopsLoaded, updateReport;
     private Long lastDateEvent, lastDateStop;
+    private String server, webService;
 
     @Override
     protected void onPreExecute() {
@@ -59,6 +60,8 @@ public class DbHelper extends AsyncTask<GetDataParams, String, Integer> {
         boolean asyncTaskFinished = false;
         boolean isTimer = params[0].timer;
         updateReport = params[0].updateReport;
+        server = params[0].server;
+        webService = params[0].webService;
 
         isEventsStopsLoaded = false;
 
@@ -102,11 +105,11 @@ public class DbHelper extends AsyncTask<GetDataParams, String, Integer> {
             envelope.setOutputSoapObject(request);
 
 //            HttpTransportSE httpse = new HttpTransportSE(Constants.URL,300000);
-            HttpTransportSE httpse = new HttpTransportSE(DbContract.URL);
+            HttpTransportSE httpse = new HttpTransportSE(String.format(DbContract.URL,server,webService));
             ArrayList<HeaderProperty> headerList = new ArrayList<HeaderProperty>();
             headerList.add(new HeaderProperty(DbContract.HEADER_TYPE, DbContract.HEADER_DATA));
             try {
-                httpse.call(DbContract.SOAP_ACTION + DbContract.METHOD_NAME_REPORT, envelope, headerList);
+                httpse.call(String.format(DbContract.SOAP_ACTION,server,webService) + DbContract.METHOD_NAME_REPORT, envelope, headerList);
                 response = (SoapPrimitive) envelope.getResponse();
 
                 if (response == null) {
@@ -435,6 +438,9 @@ public class DbHelper extends AsyncTask<GetDataParams, String, Integer> {
                 reportForShiftProduct.setQuality        (exchangeObjectTable.getInt("QUALITY"));
                 reportForShiftProduct.setOee            (exchangeObjectTable.getInt("OEE"));
 
+//                reportForShiftProduct.setStart(Utils.dateFromUnix(exchangeObjectTable.getLong("START")));
+//                reportForShiftProduct.setEnd(Utils.dateFromUnix(exchangeObjectTable.getLong("END")));
+
                 objectArrayListProducts.add(reportForShiftProduct);
 
             }
@@ -471,7 +477,7 @@ public class DbHelper extends AsyncTask<GetDataParams, String, Integer> {
     private boolean checkWebServiceAvailability(){
 
         try {
-            URL url = new URL(DbContract.CHECK_URL);
+            URL url = new URL(String.format(DbContract.CHECK_URL,server,webService));
             HttpURLConnection urlConnect = (HttpURLConnection) url.openConnection();
             urlConnect.setRequestProperty(DbContract.REQUEST_PROPERTY_CONNECTION, DbContract.REQUEST_PROPERTY_CLOSE);
             urlConnect.setConnectTimeout(DbContract.REQUEST_TIMEOUT); // Timeout 2 seconds.

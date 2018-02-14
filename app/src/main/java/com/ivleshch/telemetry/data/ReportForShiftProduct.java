@@ -1,5 +1,7 @@
 package com.ivleshch.telemetry.data;
 
+import java.util.Date;
+
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
 
@@ -24,6 +26,24 @@ public class ReportForShiftProduct extends RealmObject{
     private Integer performance;
     private Integer quality;
     private Integer oee;
+    private Date start;
+    private Date end;
+
+    public Date getStart() {
+        return start;
+    }
+
+    public void setStart(Date start) {
+        this.start = start;
+    }
+
+    public Date getEnd() {
+        return end;
+    }
+
+    public void setEnd(Date end) {
+        this.end = end;
+    }
 
     public Integer getAvailability() {
         return availability;

@@ -17,5 +17,11 @@
     <string name="messageEmptyData">Данные за указанную дату отсутствуют</string>
     <string name="emptyDescription">Отсутствует описание</string>
 
+    <string name="title_settings_category_server">Параметры подключения</string>
+    <string name="title_settings_server">Сервер</string>
+    <string name="title_settings_web_service">Имя публикации</string>
+    <string name="title_settings">Настройки</string>
+
+
 
 </resources>

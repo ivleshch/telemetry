@@ -8,9 +8,18 @@ import org.kobjects.base64.Base64;
 
 public class DbContract {
 
-    public static final String CHECK_URL = "http://10.1.1.11:8080/ERP_Telemetry/ws/ExchangeMobile.1cws?wsdl";
-    public static final String URL = "http://10.1.1.11:8080/ERP_Telemetry/ws/ExchangeMobile.1cws";
-    public static final String SOAP_ACTION = "10.1.1.11:8080/ERP_Telemetry/ws/ExchangeMobile.1cws?wsdl/";
+//    10.1.1.11
+//    ERP_Telemetry
+//    10.1.1.105
+//    ExchangeMobile
+    public static final String SETTINGS_SERVER_KEY = "server";
+    public static final String SETTINGS_WEBSERVICE_KEY = "web_service";
+    public static final String SETTINGS_SERVER_VALUE = "10.1.1.11:8080";
+    public static final String SETTINGS_WEBSERVICE_VALUE = "ERP_Telemetry";
+
+    public static final String CHECK_URL = "http://%1$s/%2$s/ws/ExchangeMobile.1cws?wsdl";
+    public static final String URL = "http://%1$s/%2$s/ws/ExchangeMobile.1cws";
+    public static final String SOAP_ACTION = "%1$s/%2$s/ws/ExchangeMobile.1cws?wsdl/";
     public static final String NAMESPACE = "ExchangeMobile";
     public static final String HEADER_TYPE = "Authorization";
     public static final String METHOD_NAME_REPORT = "GetReport";
@@ -82,6 +91,7 @@ public class DbContract {
     public static final String DATABASE_TABLE_LINE_INFORMATION_QUALITY_PERCENT      = "quality_percent";
     public static final String DATABASE_TABLE_LINE_INFORMATION_DURATION_STOPS       = "duration_stops";
     public static final String DATABASE_TABLE_LINE_INFORMATION_REASON_STOP          = "reason_stop";
+
 
 
 

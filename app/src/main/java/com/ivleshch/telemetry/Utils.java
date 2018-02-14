@@ -558,12 +558,12 @@ public class Utils {
                     .equalTo("workCenter",reportForShift.getWorkCenter().getUid())
                     .findAll();
 
-            quantityEvents = events.sum("count").intValue();
+//            quantityEvents = events.sum("count").intValue();
             quantityStops = stops.size();
 
             shiftDuration = new Duration(startOfShift.getTime(), endOfShift.getTime());
             shiftDurationSeconds = shiftDuration.getStandardSeconds();
-            shiftDurationHours = shiftDuration.getStandardHours();
+//            shiftDurationHours = shiftDuration.getStandardHours();
 
             stopDuration = stops.sum("duration").intValue();
 
@@ -571,11 +571,11 @@ public class Utils {
 
             durationStops = Utils.timeConversion(stopDuration)+"/"+(int) stopsPersent+"%";
 
-            if(stops.size() == 0 ){
-                avaibilityPercent = -1;
-            } else{
-                avaibilityPercent = 100 - Math.round((double) stopDuration / shiftDurationSeconds * 100);
-            }
+//            if(stops.size() == 0 ){
+//                avaibilityPercent = -1;
+//            } else{
+//                avaibilityPercent = 100 - Math.round((double) stopDuration / shiftDurationSeconds * 100);
+//            }
 
 
             for (Stop stop : stops) {
@@ -610,19 +610,20 @@ public class Utils {
 
             for(ReportForShiftProduct reportForShiftProduct:reportForShiftsProducts){
 
+                avaibilityPercent = reportForShiftProduct.getAvailability();
+                performancePercent = reportForShiftProduct.getPerformance();
+
                 if(reportForShift.getFinished()){
                     qualityPercent = reportForShiftProduct.getQuality();
                     oeePercent = reportForShiftProduct.getOee();
-                    avaibilityPercent = reportForShiftProduct.getAvailability();
-                    performancePercent = reportForShiftProduct.getPerformance();
-                } else{
+                }else{
                     qualityPercent = -1;
                     oeePercent = -1;
-                    if(quantityEvents==0){
-                        performancePercent = -1;
-                    } else{
-                        performancePercent = Math.round((double) quantityEvents / (reportForShiftProduct.getStandardSpeed()*shiftDurationHours) * 100);
-                    }
+//                    if(quantityEvents==0){
+//                        performancePercent = -1;
+//                    } else{
+//                        performancePercent = Math.round((double) quantityEvents / (reportForShiftProduct.getStandardSpeed()*shiftDurationHours) * 100);
+//                    }
                 }
 
                 lines.add(new LineInformation(reportForShiftProduct.getUid(),

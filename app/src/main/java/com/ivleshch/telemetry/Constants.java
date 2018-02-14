@@ -6,8 +6,6 @@ package com.ivleshch.telemetry;
 
 public class Constants {
 
-
-
     public static final String START_OF_SHIFT = "start_of_shift";
     public static final String END_OF_SHIFT   = "end_of_shift";
 

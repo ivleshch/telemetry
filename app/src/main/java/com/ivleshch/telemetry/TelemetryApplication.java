@@ -27,6 +27,7 @@ public class TelemetryApplication extends Application {
                         .schemaVersion(1)
                         .build();
         Realm.setDefaultConfiguration(configuration);
+
     }
 
 }
