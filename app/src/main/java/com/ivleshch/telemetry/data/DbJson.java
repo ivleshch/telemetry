@@ -6,9 +6,10 @@ package com.ivleshch.telemetry.data;
 
 public class DbJson {
 
-    Long startOfShift;
-    Long endOfShift;
-    boolean updateReport;
+    private Long startOfShift;
+    private Long endOfShift;
+    private boolean updateReport;
+    private Long lastUpdate;
 
     public Long getStartOfShift() {
         return startOfShift;
@@ -34,9 +35,19 @@ public class DbJson {
         this.updateReport = updateReport;
     }
 
-    public DbJson(Long startOfShift, Long endOfShift, boolean updateReport) {
+    public Long getLastUpdate() {
+        return lastUpdate;
+    }
+
+    public void setLastUpdate(Long lastUpdate) {
+        this.lastUpdate = lastUpdate;
+    }
+
+
+    public DbJson(Long startOfShift, Long endOfShift, boolean updateReport, Long lastUpdate) {
         this.startOfShift = startOfShift;
         this.endOfShift = endOfShift;
         this.updateReport = updateReport;
+        this.lastUpdate = lastUpdate;
     }
 }

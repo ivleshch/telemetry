@@ -10,8 +10,9 @@
         android:layout_height="wrap_content"
         android:gravity="center"
         android:textColor="@color/colorPrimary"
-        android:textSize="@dimen/text_size_middle"
+        android:textSize="@dimen/text_size_middle_small"
         android:textStyle="bold|italic"
+        android:text=""
         />
 
 </LinearLayout>

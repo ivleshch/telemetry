@@ -24,7 +24,8 @@ public class TelemetryApplication extends Application {
         RealmConfiguration configuration =
                 new RealmConfiguration.Builder()
                         .name("Telemetry.realm")
-                        .schemaVersion(1)
+                        .schemaVersion(2)
+                        .migration(new Migration())
                         .build();
         Realm.setDefaultConfiguration(configuration);
 

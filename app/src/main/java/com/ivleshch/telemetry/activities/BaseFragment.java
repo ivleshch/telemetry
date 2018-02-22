@@ -1,4 +1,4 @@
-package com.ivleshch.telemetry;
+package com.ivleshch.telemetry.activities;
 
 import android.support.v4.app.Fragment;
 

@@ -1,4 +1,4 @@
-package com.ivleshch.telemetry.data;
+package com.ivleshch.telemetry.webService;
 
 import java.util.Date;
 
@@ -14,6 +14,7 @@ public class GetDataParams {
     boolean updateReport;
     String server;
     String webService;
+    Date lastUpdate;
 
     public Date getStartOfShift() {
         return startOfShift;
@@ -63,12 +64,21 @@ public class GetDataParams {
         this.webService = webService;
     }
 
-    public GetDataParams(Date startOfShift, Date endOfShift, boolean timer, boolean updateReport, String server, String webService) {
+    public Date getLastUpdate() {
+        return lastUpdate;
+    }
+
+    public void setLastUpdate(Date lastUpdate) {
+        this.lastUpdate = lastUpdate;
+    }
+
+    public GetDataParams(Date startOfShift, Date endOfShift, boolean timer, boolean updateReport, String server, String webService, Date lastUpdate) {
         this.startOfShift = startOfShift;
         this.endOfShift = endOfShift;
         this.timer = timer;
         this.updateReport = updateReport;
         this.server = server;
         this.webService = webService;
+        this.lastUpdate = lastUpdate;
     }
 }

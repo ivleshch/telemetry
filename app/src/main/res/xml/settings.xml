@@ -14,4 +14,21 @@
 
     </PreferenceCategory>
 
+
+    <PreferenceCategory android:title="@string/title_settings_category_update">
+
+        <SwitchPreference
+            android:key="settings_switch_update"
+            android:title="@string/title_settings_auto_update"
+            />
+
+        <EditTextPreference
+            android:key="settings_update_interval"
+            android:title="@string/title_settings_auto_update_interval"
+            android:inputType="number"
+            android:defaultValue="0"/>
+
+    </PreferenceCategory>
+
+
 </PreferenceScreen>

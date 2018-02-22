@@ -1,4 +1,4 @@
-package com.ivleshch.telemetry;
+package com.ivleshch.telemetry.activities;
 
 import android.graphics.Canvas;
 import android.graphics.Paint;
@@ -15,6 +15,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 
+import com.ivleshch.telemetry.AdapterLines;
+import com.ivleshch.telemetry.R;
+import com.ivleshch.telemetry.Utils;
+import com.ivleshch.telemetry.data.Constants;
 import com.ivleshch.telemetry.data.DbContract;
 import com.ivleshch.telemetry.data.LineInformation;
 
@@ -31,12 +35,13 @@ public class FragmentLines extends Fragment implements View.OnTouchListener{
     private AdapterLines.ItemClickListener itemClickListenerLines;
     private ArrayList<LineInformation> lines;
     private RecyclerView rvLines;
-    private boolean isTimer, linesIsUpdaditing;
-    private Date startOfShift, endOfShift, endOfShiftRealm;
+    private boolean isTimer, isUpdaditing;
+    private Date startOfShift, endOfShift;
     private Integer getDataResult;
     private ItemTouchHelper itemTouchHelper;
     private Paint p = new Paint();
     private LinearLayout llEmptyData;
+    private boolean isTimerNeedToUpdate;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup parent, Bundle savedInstanceState) {
@@ -71,6 +76,7 @@ public class FragmentLines extends Fragment implements View.OnTouchListener{
 
         lines = new ArrayList<>();
         adapterLines = new AdapterLines(lines,itemClickListenerLines);
+
         if(getArguments()!=null){
             updateLineInfomation(startOfShift,endOfShift,Constants.ASYNC_TASK_RESULT_SUCCESSFUL);
         }
@@ -79,20 +85,9 @@ public class FragmentLines extends Fragment implements View.OnTouchListener{
 
         view.setOnTouchListener(this);
 
-//        view.setOnTouchListener(new OnSwipeTouchListener(getContext()));
-//        view.setOnTouchListener(new View.OnTouchListener() {
-//            @Override
-//            public boolean onTouch(View v, MotionEvent event) {
-
-//            }
-//        });
-
         itemTouchHelper = new ItemTouchHelper(mIth);
         itemTouchHelper.attachToRecyclerView(rvLines);
-
-
     }
-
 
     @Override
     public boolean onTouch(View v, MotionEvent event) {
@@ -158,32 +153,28 @@ public class FragmentLines extends Fragment implements View.OnTouchListener{
 
     public void updateLineInfomation(Date start, Date end, Integer getData){
 
-        if(getData.equals(Constants.TIMER_ASYNC_TASK_RESULT_SUCCESSFUL)
-                || getData.equals(Constants.TIMER_ASYNC_TASK_RESULT_FAILED)){
-            isTimer = true;
-        }else{
-            isTimer = false;
-        }
+        isTimer = Utils.isTimer(getData);
 
         startOfShift = start;
         endOfShift = end;
         getDataResult = getData;
-//        if((getDataResult.equals(Constants.TIMER_ASYNC_TASK_RESULT_SUCCESSFUL))
-//                && startOfShift.equals(Utils.startOfShift(Utils.currentDate(),currentShiftName))){
-//            updateLines();
-//        }else if(!isTimer){
+
+        if(!isTimer){
+
             updateLines();
-//        }
+        } else{
+            if(Utils.isTimerSuccesful(getData)){
+                isTimerNeedToUpdate = Utils.istimerNeedToUpdate(startOfShift,endOfShift);
+                if(isTimerNeedToUpdate){
+                    updateLines();
+                }
+            }
+        }
     }
 
     private void updateLines(){
-        if(!linesIsUpdaditing){
-            if(isTimer){
-//                chart.setTouchEnabled(false);
-//                barChart.setTouchEnabled(false);
-//                chart.setScaleXEnabled(false);
-            }
-            linesIsUpdaditing = true;
+        if(!isUpdaditing){
+            isUpdaditing = true;
             LineHelper lineHelper = new LineHelper();
             lineHelper.execute();
         }
@@ -197,7 +188,7 @@ public class FragmentLines extends Fragment implements View.OnTouchListener{
 
         @Override
         protected void onPostExecute(String r) {
-            linesIsUpdaditing = false;
+            isUpdaditing = false;
 
             if(adapterLines.getItemCount()>0){
                 rvLines.setVisibility(View.VISIBLE);
@@ -206,9 +197,14 @@ public class FragmentLines extends Fragment implements View.OnTouchListener{
                 rvLines.setVisibility(View.GONE);
                 llEmptyData.setVisibility(View.VISIBLE);
             }
-            rvLines.setAdapter(adapterLines);
-            adapterLines.notifyDataSetChanged();
 
+            if(Utils.istimerNeedToUpdate(startOfShift,endOfShift) && isTimer){
+                rvLines.setAdapter(adapterLines);
+                adapterLines.notifyDataSetChanged();
+            } else{
+                rvLines.setAdapter(adapterLines);
+                adapterLines.notifyDataSetChanged();
+            }
         }
 
         @Override

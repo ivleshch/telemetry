@@ -13,9 +13,21 @@ public class DbContract {
 //    10.1.1.105
 //    ExchangeMobile
     public static final String SETTINGS_SERVER_KEY = "server";
-    public static final String SETTINGS_WEBSERVICE_KEY = "web_service";
     public static final String SETTINGS_SERVER_VALUE = "10.1.1.11:8080";
+
+    public static final String SETTINGS_WEBSERVICE_KEY = "web_service";
     public static final String SETTINGS_WEBSERVICE_VALUE = "ERP_Telemetry";
+
+
+    public static final String SETTINGS_AUTO_UPDATE = "update";
+
+    public static final String SETTINGS_AUTO_UPDATE_KEY = "settings_switch_update";
+    public static final boolean SETTINGS_AUTO_UPDATE_VALUE = true;
+
+    public static final String SETTINGS_AUTO_UPDATE_INTERVAL_KEY = "settings_update_interval";
+    public static final String SETTINGS_AUTO_UPDATE_INTERVAL_VALUE = "5";
+
+
 
     public static final String CHECK_URL = "http://%1$s/%2$s/ws/ExchangeMobile.1cws?wsdl";
     public static final String URL = "http://%1$s/%2$s/ws/ExchangeMobile.1cws";

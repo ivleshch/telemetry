@@ -1,10 +1,12 @@
-package com.ivleshch.telemetry;
+package com.ivleshch.telemetry.activities;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
+
+import com.ivleshch.telemetry.R;
 
 /**
  * Created by Ivleshch on 13.02.2018.

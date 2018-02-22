@@ -19,6 +19,7 @@ public class ReportForShift extends RealmObject{
     private WorkCenter workCenter;
     private Date startOfShift;
     private Date endOfShift;
+    private Boolean conducted;
 
 
     public String getUid() {
@@ -77,4 +78,11 @@ public class ReportForShift extends RealmObject{
         this.endOfShift = endOfShift;
     }
 
+    public Boolean getConducted() {
+        return conducted;
+    }
+
+    public void setConducted(Boolean conducted) {
+        this.conducted = conducted;
+    }
 }

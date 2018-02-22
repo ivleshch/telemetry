@@ -1,4 +1,4 @@
-package com.ivleshch.telemetry.data;
+package com.ivleshch.telemetry.webService;
 
 import android.os.AsyncTask;
 import android.util.Log;
@@ -6,8 +6,18 @@ import android.util.Log;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
-import com.ivleshch.telemetry.AsyncResponse;
-import com.ivleshch.telemetry.Constants;
+import com.ivleshch.telemetry.data.Constants;
+import com.ivleshch.telemetry.data.DbContract;
+import com.ivleshch.telemetry.data.DbJson;
+import com.ivleshch.telemetry.data.Event;
+import com.ivleshch.telemetry.data.Individual;
+import com.ivleshch.telemetry.data.Nomenclature;
+import com.ivleshch.telemetry.data.ReportForShift;
+import com.ivleshch.telemetry.data.ReportForShiftProduct;
+import com.ivleshch.telemetry.data.Shift;
+import com.ivleshch.telemetry.data.ShiftUpdate;
+import com.ivleshch.telemetry.data.Stop;
+import com.ivleshch.telemetry.data.WorkCenter;
 import com.ivleshch.telemetry.Utils;
 
 import org.json.JSONArray;
@@ -37,7 +47,7 @@ public class DbHelper extends AsyncTask<GetDataParams, String, Integer> {
 
     private Realm realm;
     private String startDateOfShiftSQL, endDateOfShiftSQL,startTimeOfShiftSQL,endTimeOfShiftSQL;
-    private Long startDateOfShiftUnix, endDateOfShiftUnix;
+    private Long startDateOfShiftUnix, endDateOfShiftUnix, lastUpdateUnix;
     private Date startOfShift, endOfShift, currentDate;
     public AsyncResponse delegate = null;
     private boolean isEventsStopsLoaded, updateReport;
@@ -81,14 +91,19 @@ public class DbHelper extends AsyncTask<GetDataParams, String, Integer> {
 
             startDateOfShiftUnix = params[0].startOfShift.getTime()/1000L;
             endDateOfShiftUnix   = params[0].endOfShift.getTime()/1000L;
+            if(params[0].lastUpdate==null){
+                lastUpdateUnix = 0L;
+            } else{
+                lastUpdateUnix = params[0].lastUpdate.getTime()/1000L;
+            }
 
             Gson gson = new Gson();
 
-            DbJson dbJson = new DbJson(startDateOfShiftUnix,endDateOfShiftUnix,updateReport);
+            DbJson dbJson = new DbJson(startDateOfShiftUnix,endDateOfShiftUnix,updateReport,lastUpdateUnix);
 
             String json = gson.toJson(dbJson);
 
-            if(params.length==Constants.TIMER_RUN_ASYNC){
+            if(params.length== Constants.TIMER_RUN_ASYNC){
                 isTimer = true;
             }
 
@@ -119,8 +134,6 @@ public class DbHelper extends AsyncTask<GetDataParams, String, Integer> {
                 loadData(response);
 
             } catch (Exception e) {
-                int a= 2;
-                a=5;
             }
 
             asyncTaskFinished = true;
@@ -398,6 +411,7 @@ public class DbHelper extends AsyncTask<GetDataParams, String, Integer> {
 
             reportForShift.setUid             (exchangeObject.getString("UID"));
             reportForShift.setDeletionMark    (Utils.booleanFromInt(exchangeObject.getInt("DELETION_MARK")));
+            reportForShift.setConducted       (Utils.booleanFromInt(exchangeObject.getInt("CONDUCTED")));
             reportForShift.setFinished        (Utils.booleanFromInt(exchangeObject.getInt("FINISHED")));
             reportForShift.setShiftMaster     (Individual.findObject(exchangeObject.getString("INDIVIDUAL")));
             reportForShift.setWorkCenter      (WorkCenter.findObject(exchangeObject.getString("WORK_CENTER")));
@@ -458,7 +472,7 @@ public class DbHelper extends AsyncTask<GetDataParams, String, Integer> {
 
     }
 
-    private Integer returnResult(boolean timer, boolean finished){
+    private int returnResult(boolean timer, boolean finished){
         if(!timer){
             if (finished){
                 return Constants.ASYNC_TASK_RESULT_SUCCESSFUL;

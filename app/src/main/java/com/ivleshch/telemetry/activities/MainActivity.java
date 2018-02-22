@@ -1,4 +1,4 @@
-package com.ivleshch.telemetry;
+package com.ivleshch.telemetry.activities;
 
 import android.app.DatePickerDialog;
 import android.content.Context;
@@ -19,36 +19,38 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.view.GestureDetector;
-import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
-import android.view.SubMenu;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.DatePicker;
 import android.widget.FrameLayout;
-import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
-import android.widget.TextView;
 import android.widget.Toast;
 
+import com.ivleshch.telemetry.AdapterShifts;
+import com.ivleshch.telemetry.R;
+import com.ivleshch.telemetry.Utils;
+import com.ivleshch.telemetry.data.Constants;
 import com.ivleshch.telemetry.data.DbContract;
-import com.ivleshch.telemetry.data.DbHelper;
-import com.ivleshch.telemetry.data.GetDataParams;
+import com.ivleshch.telemetry.data.ReportForShift;
 import com.ivleshch.telemetry.data.Shift;
 import com.ivleshch.telemetry.data.ShiftUpdate;
+import com.ivleshch.telemetry.webService.AsyncResponse;
+import com.ivleshch.telemetry.webService.DbHelper;
+import com.ivleshch.telemetry.webService.GetDataParams;
 import com.yarolegovich.discretescrollview.DiscreteScrollView;
 import com.yarolegovich.discretescrollview.transform.Pivot;
 import com.yarolegovich.discretescrollview.transform.ScaleTransformer;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Timer;
+import java.util.TimerTask;
 
 import io.realm.Realm;
 import io.realm.RealmResults;
@@ -57,22 +59,16 @@ import io.realm.Sort;
 public class MainActivity extends AppCompatActivity
         implements View.OnClickListener,
         NavigationView.OnNavigationItemSelectedListener,
-        AsyncResponse{
+        AsyncResponse {
 
     private Date startofShift, endOfShift;
-    private TextView tvCurrentDate;
-    private ImageButton arrowLeftDate, arrowRightDate;
-    private final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd.MM.yyyy");
     private Calendar calendarCurrentDate;
     private DatePickerDialog.OnDateSetListener currentDatePicker;
     private String currentShiftName;
     private DrawerLayout drawer;
-    private SubMenu subMenu;
     private NavigationView navigationView;
-    private Menu menu;
     private Realm realm;
     private RealmResults<Shift> shifts;
-    private int idDevice, selectedDevice;
     private Toolbar toolbar;
     private ProgressBar pbGetData;
     private Timer timer;
@@ -89,162 +85,11 @@ public class MainActivity extends AppCompatActivity
     private boolean updateNearestDate;
     private String uidWorkCenter;
     private FrameLayout frameLayout;
-    private GestureDetector gestureDetector;
-
-    public void replaceFragment(int idFragment, Bundle bundle,String uid){
-        FragmentTransaction ft;
-        switch (idFragment){
-            case Constants.LINE_FRAGMENT:
-                FragmentLines fragmentLines = new FragmentLines();
-                fragmentLines.setArguments(bundle);
-
-                ft = getSupportFragmentManager().beginTransaction();
-//                ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
-                ft.setCustomAnimations(R.animator.slide_in_left, R.animator.slide_in_right);
-                ft.replace(R.id.fragment_main_menu, fragmentLines);
-//                ft.addToBackStack(null);
-                ft.commit();
-
-                break;
-            case Constants.CHART_FRAGMENT:
-
-                uidWorkCenter = uid;
-                FragmentMain fragmentMain = new FragmentMain();
-                fragmentMain.setArguments(bundle);
-
-                ft = getSupportFragmentManager().beginTransaction();
-//                ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
-                ft.setCustomAnimations(R.animator.slide_in_left, R.animator.slide_in_right);
-                ft.replace(R.id.fragment_main_menu, fragmentMain);
-                ft.addToBackStack(null);
-                ft.setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out);
-                ft.commit();
-
-                break;
-        }
-    }
-
-    public void gestureFinish(int gesture) {
-        List<Shift> shifts = adapterShifts.getShifts();
-        switch (gesture){
-            case MotionEvent.EDGE_RIGHT:
-                if((currentShiftIndex>0) && (shifts.size()>0) && (currentShiftIndex!=shifts.size()-1)){
-
-                    currentShiftIndex = currentShiftIndex+1;
-                    currentShift = shifts.get(currentShiftIndex);
-                    oldShiftIndex = currentShiftIndex;
-                    scrollView.scrollToPosition(currentShiftIndex);
-                    getData(false,false);
-                }
-                break;
-            case MotionEvent.EDGE_LEFT:
-                if(currentShift!=null){
-                    if(currentShiftIndex>0 && shifts.size()>0){
-                        currentShiftIndex = currentShiftIndex-1;
-                        currentShift = shifts.get(currentShiftIndex);
-                        oldShiftIndex = currentShiftIndex;
-                        scrollView.scrollToPosition(currentShiftIndex);
-                        getData(false,false);
-                    }
-                }
-
-                break;
-            default:
-                break;
-        }
-//        swipeRefreshLayout.setEnabled(gesture);
-    }
-
-    @Override
-    public void processFinish(Integer output){
-
-        realm = Realm.getDefaultInstance();
-        shifts = realm.where(Shift.class)
-                .findAllSorted(new String[]{"startOfShift"}, new Sort[]{Sort.ASCENDING});
-
-        scrollToDate = hmShifts.size() == 0;
-
-        for(Shift shift:shifts){
-            if(hmShifts.get(shift.getStartOfShift())==null){
-                adapterShifts.addItem(realm.copyFromRealm(shift));
-                hmShifts.put(shift.getStartOfShift(),realm.copyFromRealm(shift));
-            }
-        }
-
-        if(hmShifts.size()>0){
-            if(currentShift==null || datePickerSelect){
-                Shift currentFindShift = Utils.findCurrentShift(adapterShifts.getShifts(),datePickerSelect,calendarCurrentDate.getTime());
-                if (!(datePickerSelect && currentFindShift==null)){
-                    currentShift = currentFindShift;
-                }
-                if(datePickerSelect && currentFindShift==null){
-                    Toast.makeText(this, getString(R.string.messageEmptyData), Toast.LENGTH_LONG).show();
-                }
-            }
-            currentShiftIndex = Utils.findCurrentShiftIndex(currentShift,adapterShifts.getShifts());
-
-            if(currentShift!=null){
-                if(scrollToDate || currentShiftIndex!=oldShiftIndex){
-                    scrollView.scrollToPosition(currentShiftIndex);
-                    oldShiftIndex = currentShiftIndex;
-                    if(scrollToDate && !Utils.dateBetween(calendarCurrentDate.getTime(),currentShift.getDate())){
-                        getData(false, false);
-                        updateNearestDate = true;
-                    }
-                } 
-            }
-
-        }
-
-        adapterShifts.notifyDataSetChanged();
-        if(currentShift!=null){
-            startofShift = currentShift.getStartOfShift();
-            endOfShift = currentShift.getEndOfShift();
-            updateView(output);
-        }
-
-        realm.close();
-
-        if(!updateNearestDate){
-            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
-            swipeRefreshLayout.setRefreshing(false);
-        }
-        updateNearestDate = false;
-        datePickerSelect = false;
-
-
-    }
-
-    @Override
-    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-
-        item.setChecked(true);
-
-        switch (item.getItemId()){
-            case R.id.nav_settings:
-                Intent intent = new Intent(this, SettingsActivity.class);
-                startActivity(intent);
-                break;
-            default:
-                break;
-        }
-
-//        if (subMenu.findItem(selectedDevice)!=null){
-//            subMenu.findItem(selectedDevice).setChecked(false);
-//        }
-
-//        idDevice=item.getItemId();
-
-//        selectedDevice = idDevice;
-//        getData(false,false);
-
-
-        drawer.closeDrawers();
-
-//        toolbar.setTitle(item.getTitle());
-
-        return false;
-    }
+    private boolean isUpdaditing;
+    private Date lastUpdate;
+    private LinearLayout transparentLayout;
+    private boolean autoUpdate;
+    private int repeatMin;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -254,12 +99,22 @@ public class MainActivity extends AppCompatActivity
 
         final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         final SharedPreferences.Editor editor = sharedPreferences.edit();
+
         if (sharedPreferences.getString(DbContract.SETTINGS_SERVER_KEY,"").equals("")){
             editor.putString(DbContract.SETTINGS_SERVER_KEY, DbContract.SETTINGS_SERVER_VALUE).apply();
         }
         if (sharedPreferences.getString(DbContract.SETTINGS_WEBSERVICE_KEY,"").equals("")){
             editor.putString(DbContract.SETTINGS_WEBSERVICE_KEY, DbContract.SETTINGS_WEBSERVICE_VALUE).apply();
         }
+
+        if (!sharedPreferences.getBoolean(DbContract.SETTINGS_AUTO_UPDATE,false)){
+            editor.putBoolean(DbContract.SETTINGS_AUTO_UPDATE, true).apply();
+            editor.putBoolean(DbContract.SETTINGS_AUTO_UPDATE_KEY, DbContract.SETTINGS_AUTO_UPDATE_VALUE).apply();
+            editor.putString(DbContract.SETTINGS_AUTO_UPDATE_INTERVAL_KEY, DbContract.SETTINGS_AUTO_UPDATE_INTERVAL_VALUE).apply();
+        }
+
+        transparentLayout = (LinearLayout) findViewById(R.id.transparentLayout);
+        showTransparentLayout(false);
 
         updateNearestDate = false;
         datePickerSelect = false;
@@ -420,75 +275,265 @@ public class MainActivity extends AppCompatActivity
 
     }
 
+    public void  showTransparentLayout(boolean visibility){
+        if(visibility){
+            transparentLayout.setVisibility(View.VISIBLE);
+        } else{
+            transparentLayout.setVisibility(View.GONE);
+        }
+        transparentLayout.setClickable(false);
+    }
+
+    public void replaceFragment(int idFragment, Bundle bundle,String uid){
+        FragmentTransaction ft;
+        switch (idFragment){
+            case Constants.LINE_FRAGMENT:
+                FragmentLines fragmentLines = new FragmentLines();
+                fragmentLines.setArguments(bundle);
+
+                ft = getSupportFragmentManager().beginTransaction();
+//                ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
+                ft.setCustomAnimations(R.animator.slide_in_left, R.animator.slide_in_right);
+                ft.replace(R.id.fragment_main_menu, fragmentLines);
+//                ft.addToBackStack(null);
+                ft.commit();
+
+                break;
+            case Constants.CHART_FRAGMENT:
+
+                uidWorkCenter = uid;
+                FragmentMain fragmentMain = new FragmentMain();
+                fragmentMain.setArguments(bundle);
+
+                ft = getSupportFragmentManager().beginTransaction();
+//                ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
+                ft.setCustomAnimations(R.animator.slide_in_left, R.animator.slide_in_right);
+                ft.replace(R.id.fragment_main_menu, fragmentMain);
+                ft.addToBackStack(null);
+                ft.setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out);
+                ft.commit();
+
+                break;
+        }
+    }
+
+    public void gestureFinish(int gesture) {
+        List<Shift> shifts = adapterShifts.getShifts();
+        switch (gesture){
+            case MotionEvent.EDGE_RIGHT:
+                if((currentShiftIndex>0) && (shifts.size()>0) && (currentShiftIndex!=shifts.size()-1)){
+
+                    currentShiftIndex = currentShiftIndex+1;
+                    currentShift = shifts.get(currentShiftIndex);
+                    oldShiftIndex = currentShiftIndex;
+                    scrollView.scrollToPosition(currentShiftIndex);
+                    getData(false,false);
+                }
+                break;
+            case MotionEvent.EDGE_LEFT:
+                if(currentShift!=null){
+                    if(currentShiftIndex>0 && shifts.size()>0){
+                        currentShiftIndex = currentShiftIndex-1;
+                        currentShift = shifts.get(currentShiftIndex);
+                        oldShiftIndex = currentShiftIndex;
+                        scrollView.scrollToPosition(currentShiftIndex);
+                        getData(false,false);
+                    }
+                }
+
+                break;
+            default:
+                break;
+        }
+//        swipeRefreshLayout.setEnabled(gesture);
+    }
+
+    @Override
+    public void processFinish(Integer output){
+
+        isUpdaditing = false;
+
+        realm = Realm.getDefaultInstance();
+        shifts = realm.where(Shift.class)
+                .findAllSorted(new String[]{"startOfShift"}, new Sort[]{Sort.ASCENDING});
+
+        scrollToDate = hmShifts.size() == 0;
+
+        for(Shift shift:shifts){
+            if(hmShifts.get(shift.getStartOfShift())==null){
+                adapterShifts.addItem(realm.copyFromRealm(shift));
+                hmShifts.put(shift.getStartOfShift(),realm.copyFromRealm(shift));
+            }
+        }
+
+        if(hmShifts.size()>0){
+            if(currentShift==null || datePickerSelect){
+                Shift currentFindShift = Utils.findCurrentShift(adapterShifts.getShifts(),datePickerSelect,calendarCurrentDate.getTime());
+                if (!(datePickerSelect && currentFindShift==null)){
+                    currentShift = currentFindShift;
+                }
+                if(datePickerSelect && currentFindShift==null){
+                    Toast.makeText(this, getString(R.string.messageEmptyData), Toast.LENGTH_LONG).show();
+                }
+            }
+            currentShiftIndex = Utils.findCurrentShiftIndex(currentShift,adapterShifts.getShifts());
+
+            if(currentShift!=null){
+                if(scrollToDate || currentShiftIndex!=oldShiftIndex){
+                    scrollView.scrollToPosition(currentShiftIndex);
+                    oldShiftIndex = currentShiftIndex;
+                    if(!Utils.isTimer(output)){
+                        if(scrollToDate && !Utils.dateBetween(calendarCurrentDate.getTime(),currentShift.getDate())){
+                            getData(false, false);
+                            updateNearestDate = true;
+                        }
+                    }
+                }
+            }
+
+        }
+
+        adapterShifts.notifyDataSetChanged();
+        if(currentShift!=null){
+            if(!Utils.isTimer(output)){
+                startofShift = currentShift.getStartOfShift();
+                endOfShift = currentShift.getEndOfShift();
+                updateView(output);
+            } else{
+                if (Utils.istimerNeedToUpdate(currentShift.getStartOfShift(), currentShift.getEndOfShift())){
+                    startofShift = currentShift.getStartOfShift();
+                    endOfShift = currentShift.getEndOfShift();
+                    updateView(output);
+                }
+            }
+        }
+
+        realm.close();
+
+        if(!updateNearestDate){
+            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+            swipeRefreshLayout.setRefreshing(false);
+        }
+//        }
+        updateNearestDate = false;
+        datePickerSelect = false;
+    }
+
+    @Override
+    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+
+        item.setChecked(true);
+
+        switch (item.getItemId()){
+            case R.id.nav_settings:
+                Intent intent = new Intent(this, SettingsActivity.class);
+                startActivity(intent);
+                break;
+            default:
+                break;
+        }
+
+//        if (subMenu.findItem(selectedDevice)!=null){
+//            subMenu.findItem(selectedDevice).setChecked(false);
+//        }
+
+//        idDevice=item.getItemId();
+
+//        selectedDevice = idDevice;
+//        getData(false,false);
+
+
+        drawer.closeDrawers();
+
+//        toolbar.setTitle(item.getTitle());
+
+        return false;
+    }
+
 
     public void startTimer(){
 
-//        if(timerStarted){
-//            return;
-//        }
-//
-//        timerStarted = true;
-//        timer = new Timer();
-//        timer.scheduleAtFixedRate(new TimerTask() {
-//            @Override
-//            public void run() {
-//                getData(true);
-//            }
-//        },Constants.TIME_INTERVAL_NOTIFICATION_START,Constants.TIME_INTERVAL_NOTIFICATION_REPEAT);
+        if(timerStarted){
+            return;
+        }
+
+        final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        if(!sharedPreferences.getBoolean(DbContract.SETTINGS_AUTO_UPDATE_KEY,false)){
+            return;
+        }
+
+        int repeatMin;
+        try{
+            repeatMin = Integer.parseInt(sharedPreferences.getString(DbContract.SETTINGS_AUTO_UPDATE_INTERVAL_KEY,""));
+        }catch (Exception e){
+            repeatMin = 0;
+        }
+
+        if(repeatMin==0){
+            return;
+        }
+
+        timerStarted = true;
+        timer = new Timer();
+        timer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                if(currentShift!=null){
+                    if (Utils.istimerNeedToUpdate(currentShift.getStartOfShift(), currentShift.getEndOfShift())){
+                        getData(true,false);
+                    }
+                }
+            }
+        },repeatMin*Constants.TIME_INTERVAL_NOTIFICATION_START,repeatMin*Constants.TIME_INTERVAL_NOTIFICATION_REPEAT);
     }
 
     public void stopTimer(){
-//        if (timerStarted && timer != null) {
-//            timer.cancel();
-//            timer.purge();
-//            timerStarted = false;
-//        }
+        if (timerStarted && timer != null) {
+            timer.cancel();
+            timer.purge();
+            timerStarted = false;
+        }
     }
 
     public void getData(boolean isTimer, boolean updateReport){
+
+//        if(isUpdaditing){
+//            return;
+//        }
+
+        isUpdaditing = true;
 
         boolean uploadData = true;
         Calendar calendar = Calendar.getInstance();
         Date currentTime = calendar.getTime();
 
+        lastUpdate = null;
+
+
         if(!isTimer){
             swipeRefreshLayout.setRefreshing(true);
             getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
                 WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
-        }
-        if(datePickerSelect){
-            startofShift = calendarCurrentDate.getTime();
-            endOfShift   = calendarCurrentDate.getTime();
-        } else{
-            if(currentShift==null){
-                startofShift = currentTime;
-                endOfShift   = currentTime;
-            }else{
 
-                startofShift = currentShift.getStartOfShift();
-                endOfShift = currentShift.getEndOfShift();
+            if(datePickerSelect){
+                startofShift = calendarCurrentDate.getTime();
+                endOfShift   = calendarCurrentDate.getTime();
+            } else{
+                if(currentShift==null){
+                    startofShift = currentTime;
+                    endOfShift   = currentTime;
+                }else{
 
-                Realm realmCheck;
-                realmCheck = Realm.getDefaultInstance();
-                RealmResults<ShiftUpdate> shiftUpdates = realmCheck.where(ShiftUpdate.class)
-                        .equalTo("date",Utils.dateStartOfDate(startofShift))
-                        .findAll();
-                if(shiftUpdates.size() > 0 && !updateReport){
-                    ShiftUpdate shiftUpdate = realmCheck.copyFromRealm(shiftUpdates.get(0));
-                    if(shiftUpdate.getLastUpdate().after(currentShift.getEndOfShift())
-                            || shiftUpdate.getLastUpdate().equals(currentShift.getEndOfShift())){
-                        uploadData = false;
-
-                        updateView(Constants.ASYNC_TASK_RESULT_SUCCESSFUL);
-
-                        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
-                        swipeRefreshLayout.setRefreshing(false);
-                    }
+                    startofShift = currentShift.getStartOfShift();
+                    endOfShift = currentShift.getEndOfShift();
+//                    if (lastUpdate!=null){
+//
+//                    }
                 }
-
-
             }
         }
+
+        uploadData = getLastUpdate(updateReport, endOfShift);
 
         if(uploadData){
             updateReport = false;
@@ -500,11 +545,98 @@ public class MainActivity extends AppCompatActivity
             String server  = sharedPreferences.getString(DbContract.SETTINGS_SERVER_KEY,"");
             String webService = sharedPreferences.getString(DbContract.SETTINGS_WEBSERVICE_KEY,"");
 
-            GetDataParams params = new GetDataParams(startofShift, endOfShift, isTimer,updateReport,server,webService);
+            GetDataParams params;
+            if(!isTimer){
+                params = new GetDataParams(startofShift, endOfShift, isTimer,updateReport,server,webService,lastUpdate);
+            } else{
+                params = new GetDataParams(currentTime, currentTime, isTimer,updateReport,server,webService,lastUpdate);
+            }
             DbHelper dbHelper = new DbHelper();
             dbHelper.delegate = this;
             dbHelper.execute(params);
+        } else{
+            isUpdaditing = false;
         }
+
+
+    }
+
+    private boolean getLastUpdate(boolean updateReport, Date end){
+        Realm realmCheck;
+        realmCheck = Realm.getDefaultInstance();
+        realmCheck.refresh();
+        boolean uploadData;
+
+        uploadData = true;
+
+        RealmResults<ShiftUpdate> shiftUpdates = realmCheck.where(ShiftUpdate.class)
+                .equalTo("date",Utils.dateStartOfDate(startofShift))
+                .findAll();
+        if(shiftUpdates.size() > 0 && !updateReport){
+            ShiftUpdate shiftUpdate = realmCheck.copyFromRealm(shiftUpdates.get(0));
+            if(shiftUpdate.getLastUpdate().after(end)
+                    || shiftUpdate.getLastUpdate().equals(end)){
+                uploadData = false;
+                lastUpdate = null;
+
+
+                if(datePickerSelect){
+                    if(hmShifts.size()>0){
+                        Shift currentFindShift = Utils.findCurrentShift(adapterShifts.getShifts(),datePickerSelect,calendarCurrentDate.getTime());
+                        if (currentFindShift!=null){
+                            currentShift = currentFindShift;
+                        } else{
+                            Toast.makeText(this, getString(R.string.messageEmptyData), Toast.LENGTH_LONG).show();
+                        }
+
+                        currentShiftIndex = Utils.findCurrentShiftIndex(currentShift,adapterShifts.getShifts());
+
+                        if(currentShift!=null){
+                            if(currentShiftIndex!=oldShiftIndex){
+                                scrollView.scrollToPosition(currentShiftIndex);
+                                oldShiftIndex = currentShiftIndex;
+//                                if(!Utils.isTimer(output)){
+//                                    if(scrollToDate && !Utils.dateBetween(calendarCurrentDate.getTime(),currentShift.getDate())){
+//                                        getData(false, false);
+//                                        updateNearestDate = true;
+//                                    }
+//                                }
+                            }
+                            startofShift = currentShift.getStartOfShift();
+                            endOfShift = currentShift.getEndOfShift();
+                        }
+
+                    }
+                    datePickerSelect = false;
+                }
+
+                RealmResults<ReportForShift> reportForShifts = realmCheck.where(ReportForShift.class)
+                        .equalTo("startOfShift", startofShift)
+                        .equalTo("finished",false)
+                        .findAll();
+
+                if(reportForShifts.size()>0){
+                    uploadData = true;
+                    lastUpdate = shiftUpdate.getLastUpdate();
+                }else{
+                    updateView(Constants.ASYNC_TASK_RESULT_SUCCESSFUL);
+                    getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+                    swipeRefreshLayout.setRefreshing(false);
+                }
+
+
+            } else{
+                uploadData = true;
+                lastUpdate = shiftUpdate.getLastUpdate();
+            }
+        } else{
+            uploadData = true;
+            lastUpdate = null;
+        }
+
+        realmCheck.close();
+
+        return uploadData;
     }
 
     private void updateView(Integer getDataResult){

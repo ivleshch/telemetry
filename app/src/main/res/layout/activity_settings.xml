@@ -7,8 +7,9 @@
     <include layout="@layout/toolbar" />
 
     <fragment
-        android:name="com.ivleshch.telemetry.SettingsFragment"
+
         android:tag=".SettingsFragment"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        class="com.ivleshch.telemetry.activities.SettingsFragment"/>
 </LinearLayout>

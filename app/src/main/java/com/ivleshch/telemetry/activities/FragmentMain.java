@@ -1,4 +1,4 @@
-package com.ivleshch.telemetry;
+package com.ivleshch.telemetry.activities;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -15,6 +15,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CompoundButton;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.Switch;
 import android.widget.TextView;
@@ -36,19 +37,22 @@ import com.github.mikephil.charting.formatter.IAxisValueFormatter;
 import com.github.mikephil.charting.formatter.IValueFormatter;
 import com.github.mikephil.charting.highlight.Highlight;
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
+import com.github.mikephil.charting.listener.ChartTouchListener;
+import com.github.mikephil.charting.listener.OnChartGestureListener;
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 import com.github.mikephil.charting.utils.ColorTemplate;
 import com.github.mikephil.charting.utils.MPPointF;
 import com.github.mikephil.charting.utils.ViewPortHandler;
+import com.ivleshch.telemetry.DateAxisValueFormatter;
+import com.ivleshch.telemetry.R;
+import com.ivleshch.telemetry.Utils;
+import com.ivleshch.telemetry.data.Constants;
 import com.ivleshch.telemetry.data.DbContract;
 import com.ivleshch.telemetry.data.Event;
 import com.ivleshch.telemetry.data.LineInformation;
 import com.ivleshch.telemetry.data.Stop;
 
-import org.joda.time.Duration;
-
 import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -65,11 +69,11 @@ import io.realm.RealmResults;
 
 public class FragmentMain extends BaseFragment implements
         View.OnClickListener,
-        View.OnTouchListener{
+        View.OnTouchListener,
+        OnChartGestureListener {
 
-    private final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm");
     private LineChart chart;
-    private List<Entry> entries;
+    private List<Entry> entries, currentEntries;
     private List<Entry> entriesStops;
     private LineDataSet dataSet, datasetStops;
     private LineData lineData;
@@ -81,7 +85,7 @@ public class FragmentMain extends BaseFragment implements
     private BarData barData;
     private int reasonCount;
 
-    private boolean chartIsUpdaditing, invalidateChart, invalidateBarChart;
+    private boolean isUpdaditing, invalidateChart, invalidateBarChart;
 
     private HashMap<Entry,Integer> hmReasonsCode;
     private HashMap<Entry,String> hmReasonsDescription;
@@ -92,24 +96,20 @@ public class FragmentMain extends BaseFragment implements
     private HashMap<Integer,Integer> hmBarDurationSorted;
 
     private Date startOfShift, endOfShift;
-    private int idDevice;
     private Integer getDataResult;
     private boolean isTimer;
     private HashMap<Integer,Integer> hmDuration;
     private HashMap<Integer,Integer> hmDurationSorted;
     private HashMap<Integer,String> hmStops;
     private LineInformation lineInformation;
-    private int  quantityStops, quantityEvents;
-    private String durationStops, reasonStop;
-    private Duration shiftDuration;
-    private long shiftDurationSeconds,shiftDurationHours;
     private String uidWorkCenter, uidNomenclature;
     private ArrayList<LineInformation> lines;
     private CardView cardViewLine;
     private RelativeLayout rlLineChart, rlBarChart;
     private LinearLayout llBarChart, llEmptyData;
     private Switch switchButton;
-
+    private boolean isTimerNeedToUpdate;
+    private ProgressBar pbLineChart;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup parent, Bundle savedInstanceState) {
@@ -119,6 +119,8 @@ public class FragmentMain extends BaseFragment implements
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
+        pbLineChart = (ProgressBar) view.findViewById(R.id.pb_getDataLineChart);
 
         cardViewLine = (CardView) view.findViewById(R.id.card_view);
         rlLineChart = (RelativeLayout) view.findViewById(R.id.rl_line_chart);
@@ -256,13 +258,14 @@ public class FragmentMain extends BaseFragment implements
         hmBarDurationSorted.clear();
 
         entries = new ArrayList<Entry>();
+        currentEntries = new ArrayList<Entry>();
 
         entriesStops = new ArrayList<Entry>();
 
         barEntries = new ArrayList<>();
         barEntriesDuration = new ArrayList<>();
 
-        chartIsUpdaditing = false;
+        isUpdaditing = false;
 
         chart = (LineChart) view.findViewById(R.id.line_chart);
         chart.setTouchEnabled(true);
@@ -273,6 +276,7 @@ public class FragmentMain extends BaseFragment implements
         chart.setHighlightPerTapEnabled(true);
         chart.setDoubleTapToZoomEnabled(false);
         chart.setMaxHighlightDistance(10);
+        chart.setOnChartGestureListener(this);
         chart.setOnChartValueSelectedListener(new OnChartValueSelectedListener() {
             @Override
             public void onNothingSelected() {
@@ -287,11 +291,6 @@ public class FragmentMain extends BaseFragment implements
             }
         });
 
-//        chart.setGridBackgroundColor(R.color.colorPrimaryLight);
-
-
-
-
         IMarker marker = new CustomMarkerView(getContext(),R.layout.marker_content_line_chart);
         chart.setMarker(marker);
 
@@ -301,7 +300,6 @@ public class FragmentMain extends BaseFragment implements
         xAxisChart.setLabelCount(3);
         xAxisChart.setValueFormatter(xAxisChartFormatter);
         xAxisChart.setDrawGridLines(false);
-//       xAxis.setAxisMinimum(startOfShift.getTime());
 
         YAxis leftYAxisChart = chart.getAxisLeft();
         leftYAxisChart.setLabelCount(4, false);
@@ -369,36 +367,11 @@ public class FragmentMain extends BaseFragment implements
 
     }
 
-
     @Override
     public void onClick(View v) {
         switch (v.getId()){
             default:
                 break;
-        }
-    }
-
-    public void changeChartVisibility(int chartID){
-        switch (chartID){
-            case Constants.LINE_CHART_SPEED_ID:
-                if(chart.getVisibility()==View.GONE){
-                    chart.setVisibility(View.VISIBLE);
-//                    chart.startAnimation(slideUp);
-
-                    barChart.setVisibility(View.GONE);
-
-                }
-                break;
-            case Constants.BAR_CHART_STOPS_ID:
-                if(barChart.getVisibility()==View.GONE){
-                    barChart.setVisibility(View.VISIBLE);
-//                    barChart.startAnimation(slideUp);
-
-                    chart.setVisibility(View.GONE);
-                }
-                break;
-             default:
-                 break;
         }
     }
 
@@ -417,9 +390,6 @@ public class FragmentMain extends BaseFragment implements
 
             lineInformation = lines.get(0);
             Utils.fillLineInformation(cardViewLine,lineInformation);
-//            if(getArguments().getBoolean(Constants.FRAGMENT_CLICK_ON_LINE)){
-//                updateChart(startOfShift,endOfShift,uidWorkCenter, Constants.ASYNC_TASK_RESULT_SUCCESSFUL);
-//            }
         } else{
             cardViewLine.setVisibility(View.GONE);
             rlLineChart.setVisibility(View.GONE);
@@ -428,69 +398,300 @@ public class FragmentMain extends BaseFragment implements
             llEmptyData.setVisibility(View.VISIBLE);
 
         }
-//        svAvaibility.speedPercentTo((int) avaibilityPercent);
-//        svSpeed.speedTo((int) averageSpeed);
-//        svPerformance.speedPercentTo((int) ((double) averageSpeed / Constants.LINE_PERFORMANCE * 100));
     }
 
     public void updateChart(Date start, Date end, String uid, Integer getData){
 
-        if(getData.equals(Constants.TIMER_ASYNC_TASK_RESULT_SUCCESSFUL)
-                || getData.equals(Constants.TIMER_ASYNC_TASK_RESULT_FAILED)){
-            isTimer = true;
-        }else{
-            isTimer = false;
-        }
-
+        isTimer = Utils.isTimer(getData);
         startOfShift = start;
         endOfShift = end;
         uidWorkCenter = uid;
         getDataResult = getData;
-        if((getDataResult.equals(Constants.TIMER_ASYNC_TASK_RESULT_SUCCESSFUL))
-//                && startOfShift.equals(Utils.startOfShift(Utils.currentDate(),currentShiftName))
-                ){
+
+        if(!isTimer){
             updateGraph();
-        }else if(!isTimer){
-            updateGraph();
+        } else{
+            if(Utils.isTimerSuccesful(getData)){
+                isTimerNeedToUpdate = Utils.istimerNeedToUpdate(startOfShift,endOfShift);
+                if(isTimerNeedToUpdate){
+                    updateGraph();
+                }
+            }
         }
     }
 
     private void updateGraph(){
-        if(!chartIsUpdaditing){
-            if(isTimer){
-                chart.setTouchEnabled(false);
-                barChart.setTouchEnabled(false);
-//                chart.setScaleXEnabled(false);
+        if(!isUpdaditing){
+
+            rlLineChart.setEnabled(false);
+            rlBarChart.setEnabled(false);
+            rlLineChart.setClickable(false);
+            rlBarChart.setClickable(false);
+//            pbLineChart.setVisibility(View.VISIBLE);
+            chart.setTouchEnabled(false);
+            chart.setScaleXEnabled(false);
+
+            barChart.setTouchEnabled(false);
+
+            if(!isTimer){
+                chart.setNoDataText(getString(R.string.messageUdate));
+                barChart.setNoDataText(getString(R.string.messageUdate));
+                chart.clear();
+                barChart.clear();
+                isUpdaditing = true;
+                GraphHelper graphHelper = new GraphHelper();
+                graphHelper.execute();
+            } else{
+                ((MainActivity) getActivity()).showTransparentLayout(true);
+                updateGraphs();
             }
 
-//           enableDisableCharts(false);
-            chart.clear();
-            barChart.clear();
-
-            chartIsUpdaditing = true;
-            GraphHelper graphHelper = new GraphHelper();
-            graphHelper.execute();
         }
     }
 
-    private void enableDisableCharts(boolean flag){
+    private void updateGraphs(){
 
-        chart.setTouchEnabled(flag);
-        chart.setHighlightPerTapEnabled(flag);
-        if(datasetStops!=null){
-            datasetStops.setHighlightEnabled(flag);
-        }
-        if(dataSet!=null){
-            dataSet.setHighlightEnabled(flag);
+        invalidateChart = false;
+        invalidateBarChart = false;
+
+        Realm uiRealm;
+        uiRealm = Realm.getDefaultInstance();
+        uiRealm.refresh();
+
+        entries.clear();
+        currentEntries.clear();
+        entriesStops.clear();
+
+        barEntries.clear();
+        barEntriesDuration.clear();
+
+        hmReasonsCode.clear();
+        hmReasonsDescription.clear();
+        hmBarStop.clear();
+        hmBarStopSorted.clear();
+        hmReasonAndX.clear();
+        hmReasonAndXDuration.clear();
+        hmBarReasonsDescription.clear();
+        hmBarDuration.clear();
+        hmBarDurationSorted.clear();
+
+        RealmResults<Event> graphEvents = uiRealm.where(Event.class)
+                .greaterThanOrEqualTo("date", Utils.UnixTime(startOfShift))
+                .lessThan("date", Utils.UnixTime(endOfShift))
+                .equalTo("workCenter", uidWorkCenter)
+                .findAllSorted("date");
+
+        RealmResults<Stop> graphStops = uiRealm.where(Stop.class)
+                .greaterThanOrEqualTo("date", Utils.UnixTime(startOfShift))
+                .lessThan("date", Utils.UnixTime(endOfShift))
+                .equalTo("workCenter", uidWorkCenter)
+                .findAllSorted("date");
+
+        int eventCount;
+        Date eventDate;
+
+        for (Event event : graphEvents) {
+            eventCount = event.getCount();
+            eventDate = Utils.dateFromUnix(event.getDate());
+            Entry entry = new Entry(eventDate.getTime(), eventCount);
+            entries.add(entry);
         }
 
-        barChart.setTouchEnabled(flag);
-        barChart.setHighlightPerTapEnabled(flag);
-        if(barDataSet!=null){
-            barDataSet.setHighlightEnabled(flag);
+        for (Stop stop : graphStops) {
+            Entry entry = new Entry(Utils.dateFromUnix(stop.getDate()).getTime(), 0);
+            entriesStops.add(entry);
+            if (hmReasonsCode.get(entry) == null) {
+                hmReasonsCode.put(entry, stop.getReason());
+            }
+            if (stop.getReason()!=null){
+                if (hmReasonsDescription.get(entry) == null) {
+                    hmReasonsDescription.put(entry, stop.getReasonDescription());
+                }
+                if (hmBarReasonsDescription.get(entry) == null) {
+                    hmBarReasonsDescription.put(stop.getReason(), stop.getReasonDescription());
+                }
+            }
+
+            if(hmBarStop.get(stop.getReason())==null){
+                hmBarStop.put(stop.getReason(), 1);
+            } else{
+                hmBarStop.put(stop.getReason(), hmBarStop.get(stop.getReason())+1);
+            }
+
+            if(hmBarDuration.get(stop.getReason())==null){
+                hmBarDuration.put(stop.getReason(), stop.getDuration());
+            } else{
+                hmBarDuration.put(stop.getReason(), hmBarDuration.get(stop.getReason())+stop.getDuration());
+            }
         }
-        if(barDataSetDuration!=null){
-            barDataSetDuration.setHighlightEnabled(flag);
+
+        hmBarStopSorted = Utils.sortByValues(hmBarStop);
+        hmBarDurationSorted = Utils.sortByValues(hmBarDuration);
+
+        Iterator it = hmBarStopSorted.entrySet().iterator();
+        reasonCount = 1;
+
+        while (it.hasNext()) {
+            Map.Entry pair = (Map.Entry)it.next();
+
+            BarEntry barEntry = new BarEntry(reasonCount,(Integer) pair.getValue());
+            barEntries.add(barEntry);
+
+            if(hmReasonAndX.get(reasonCount)==null){
+                hmReasonAndX.put(reasonCount, (Integer) pair.getKey());
+            }
+
+            reasonCount++;
+        }
+
+        Iterator itDuration = hmBarDurationSorted.entrySet().iterator();
+        reasonCount = 1;
+
+        while (itDuration.hasNext()) {
+            Map.Entry pair = (Map.Entry)itDuration.next();
+
+            BarEntry barEntry = new BarEntry(reasonCount,(Integer) pair.getValue());
+            barEntriesDuration.add(barEntry);
+
+            if(hmReasonAndXDuration.get(reasonCount)==null){
+                hmReasonAndXDuration.put(reasonCount, (Integer) pair.getKey());
+            }
+            reasonCount++;
+        }
+
+
+        dataSets = new ArrayList<ILineDataSet>();
+        if(entries.size()>0){
+            dataSet = new LineDataSet(entries, "Speed");
+            dataSet.setDrawValues(false);
+            dataSet.setHighlightEnabled(false);
+            dataSet.setColor(ContextCompat.getColor(getContext(),R.color.colorPrimary));
+            dataSet.setDrawCircles(false);
+
+            invalidateChart  = true;
+            dataSets.add(dataSet);
+        }
+
+        if(entriesStops.size()>0){
+
+            datasetStops = new LineDataSet(entriesStops, "Stops");
+            datasetStops.setHighlightEnabled(true);
+            datasetStops.setHighlightLineWidth(Constants.HIGH_LIGHT_LINE_WIDTS);
+            datasetStops.setCircleRadius(Constants.CHART_CIRCLE_RADIUS);
+            datasetStops.setCircleColor(Color.RED);
+            datasetStops.setColor(Color.TRANSPARENT);
+            datasetStops.setValueFormatter(new MyValueFormatter());
+            datasetStops.setValueTextSize(Constants.TEXT_VALUE_SIZE);
+            datasetStops.setCircleColorHole(Color.RED);
+            datasetStops.setValueTextColor(Color.RED);
+
+            invalidateChart  = true;
+            dataSets.add(datasetStops);
+
+        }
+
+
+        if(barEntries.size()>0){
+            barDataSet = new BarDataSet(barEntries, "Stops");
+            barDataSet.setColors(ColorTemplate.COLORFUL_COLORS);
+            barDataSet.setValueTextColor(Color.BLUE);
+            barDataSet.setValueTextSize(Constants.TEXT_VALUE_SIZE);
+            barDataSet.setValueFormatter(new MyYValueFormatter());
+            invalidateBarChart = true;
+        }
+
+        if(barEntriesDuration.size()>0){
+
+            barDataSetDuration = new BarDataSet(barEntriesDuration, "Stops duration");
+            barDataSetDuration.setColors(ColorTemplate.COLORFUL_COLORS);
+            barDataSetDuration.setValueTextColor(Color.BLUE);
+            barDataSetDuration.setValueTextSize(Constants.TEXT_VALUE_SIZE);
+            barDataSetDuration.setValueFormatter(new MyYValueFormatter());
+            invalidateBarChart = true;
+
+        }
+
+        if (invalidateChart) {
+            lineData = new LineData(dataSets);
+            chart.setData(lineData);
+        }
+
+        if (invalidateBarChart){
+            if(!switchButton.isChecked()){
+                barData = new BarData(barDataSet);
+            } else{
+                barData = new BarData(barDataSetDuration);
+            }
+            barChart.setData(barData);
+        }
+
+        uiRealm.close();
+
+        if(isTimer){
+            invalidateCharts();
+        }
+
+    }
+
+    public void invalidateCharts(){
+        boolean updateZoom = !Utils.istimerNeedToUpdate(startOfShift,endOfShift);
+
+        if (invalidateChart) {
+
+            chart.highlightValues(null);
+            if (updateZoom || !isTimer){
+                chart.fitScreen();
+            }
+            if(isTimer){
+                if(dataSet!=null){
+                    dataSet.notifyDataSetChanged();
+                }
+                if(datasetStops!=null){
+                    datasetStops.notifyDataSetChanged();
+                }
+                chart.notifyDataSetChanged();
+            }
+            chart.invalidate();
+        } else{
+            chart.clear();
+        }
+        if (invalidateBarChart){
+            barChart.highlightValue(null);
+            if (updateZoom || !isTimer){
+                barChart.fitScreen();
+            }
+            if(isTimer){
+                if(barDataSet!=null){
+                    barDataSet.notifyDataSetChanged();
+                }
+                if(barDataSetDuration!=null){
+                    barDataSetDuration.notifyDataSetChanged();
+                }
+                barChart.notifyDataSetChanged();
+            }
+            barChart.invalidate();
+        }
+        else{
+            barChart.clear();
+        }
+
+        isUpdaditing = false;
+        updateOEE();
+
+        chart.setNoDataText(getString(R.string.messageEmptyData));
+        barChart.setNoDataText(getString(R.string.messageEmptyData));
+
+        chart.setTouchEnabled(true);
+        chart.setScaleXEnabled(true);
+        barChart.setTouchEnabled(true);
+
+//            pbLineChart.setVisibility(View.GONE);
+        rlLineChart.setEnabled(true);
+        rlBarChart.setEnabled(true);
+        rlLineChart.setClickable(true);
+        rlBarChart.setClickable(true);
+        if(isTimer){
+            ((MainActivity) getActivity()).showTransparentLayout(false);
         }
     }
 
@@ -502,47 +703,7 @@ public class FragmentMain extends BaseFragment implements
 
         @Override
         protected void onPostExecute(String r) {
-
-//            boolean updateZoom = !(startOfShift.equals(Utils.startOfShift(Utils.currentDate(),currentShiftName)));
-            boolean updateZoom = true;
-
-
-            if (invalidateChart) {
-
-                chart.highlightValues(null);
-                if (updateZoom || !isTimer){
-                    chart.fitScreen();
-                }
-                if(isTimer){
-                    chart.notifyDataSetChanged();
-                }
-//                chart.setData(lineData);
-//                chart.notifyDataSetChanged();
-                chart.invalidate();
-            } else{
-                chart.clear();
-            }
-            if (invalidateBarChart){
-                barChart.highlightValue(null);
-                if (updateZoom || !isTimer){
-                    barChart.fitScreen();
-                }
-                if(isTimer){
-                    barChart.notifyDataSetChanged();
-                }
-                barChart.invalidate();
-            }
-            else{
-                barChart.clear();
-            }
-            if(isTimer){
-                chart.setTouchEnabled(true);
-                barChart.setTouchEnabled(true);
-            }
-            chartIsUpdaditing = false;
-            updateOEE();
-
-//            enableDisableCharts(true);
+            invalidateCharts();
         }
 
         @Override
@@ -550,269 +711,7 @@ public class FragmentMain extends BaseFragment implements
 
             try {
 
-                invalidateChart = false;
-                invalidateBarChart = false;
-
-                Realm graphRealm;
-                graphRealm = Realm.getDefaultInstance();
-                graphRealm.refresh();
-
-                //updateOEE
-
-                //update Chart
-//                if(!isTimer){
-                    entries.clear();
-                    entriesStops.clear();
-                    barEntries.clear();
-                    barEntriesDuration.clear();
-
-                    hmReasonsCode.clear();
-                    hmReasonsDescription.clear();
-                    hmBarStop.clear();
-                    hmBarStopSorted.clear();
-                    hmReasonAndX.clear();
-                    hmReasonAndXDuration.clear();
-                    hmBarReasonsDescription.clear();
-                    hmBarDuration.clear();
-                    hmBarDurationSorted.clear();
-//                    hmCurrentLineChart.clear();
-//                    hmCurrentLineChartEntry.clear();
-//                }
-
-//                hmCurrentLineChartAdd.clear();
-
-                RealmResults<Event> graphEvents = graphRealm.where(Event.class)
-                        .greaterThanOrEqualTo("date",Utils.UnixTime(startOfShift))
-                        .lessThan("date",Utils.UnixTime(endOfShift))
-                        .equalTo("workCenter", uidWorkCenter)
-                        .findAllSorted("date");
-
-                RealmResults<Stop> graphStops = graphRealm.where(Stop.class)
-                        .greaterThanOrEqualTo("date",Utils.UnixTime(startOfShift))
-                        .lessThan("date",Utils.UnixTime(endOfShift))
-                        .equalTo("workCenter", uidWorkCenter)
-                        .findAllSorted("date");
-
-//                averageSpeed = Math.round(graphEvents.average(DbContract.DATABASE_TABLE_RAW_EVENTS_COLUMN_COUNT));
-//                stopDuration = graphStops.sum(DbContract.DATABASE_TABLE_STOPS_COLUMN_DURATION).intValue();
-//                avaibilityPercent = 100 - Math.round((double) stopDuration / Constants.SHIFT_DURATION * 100);
-
-
-                int eventCount;
-                Date eventDate;
-
-//                if(!isTimer){
-//                    hmCurrentLineChart.clear();
-//                    hmCurrentLineChartEntry.clear();
-//                }
-
-                for (Event event : graphEvents) {
-                    eventCount = event.getCount();
-                    eventDate = Utils.dateFromUnix(event.getDate());
-
-                    Entry entry = new Entry(eventDate.getTime(), eventCount);
-//                    if(isTimer){
-//                        if(hmCurrentLineChart.get(eventDate)==null){
-//                            hmCurrentLineChartAdd.put(eventDate,eventCount);
-//                        }else{
-//                            if(hmCurrentLineChartEntry.get(eventDate)!=null){
-//                                if(hmCurrentLineChartEntry.get(eventDate).getY()!=eventCount){
-//                                    int a=2;
-//                                    a=6;
-//                                }
-//                            }
-//                        }
-//                    }
-//                    else{
-//                        hmCurrentLineChart.put(eventDate,eventCount);
-//                        hmCurrentLineChartEntry.put(eventDate,entry);
-
-                        entries.add(entry);
-//                    }
-                }
-
-//                Iterator itAdd = hmCurrentLineChartAdd.entrySet().iterator();
-//                while (itAdd.hasNext()) {
-//                    Map.Entry pair = (Map.Entry)itAdd.next();
-//
-//                    eventCount = (int) pair.getValue();
-//                    eventDate = (Date) pair.getKey();
-//
-//                    Entry entry = new Entry(eventDate.getTime(), eventCount);
-//
-//                    entries.add(entry);
-//
-//                }
-
-
-                for (Stop stop : graphStops) {
-                    Entry entry = new Entry(Utils.dateFromUnix(stop.getDate()).getTime(), 0);
-                    entriesStops.add(entry);
-                    if (hmReasonsCode.get(entry) == null) {
-                        hmReasonsCode.put(entry, stop.getReason());
-                    }
-                    if (stop.getReason()!=null){
-                        if (hmReasonsDescription.get(entry) == null) {
-                            hmReasonsDescription.put(entry, stop.getReasonDescription());
-                        }
-                        if (hmBarReasonsDescription.get(entry) == null) {
-                            hmBarReasonsDescription.put(stop.getReason(), stop.getReasonDescription());
-                        }
-                    }
-
-                    if(hmBarStop.get(stop.getReason())==null){
-                        hmBarStop.put(stop.getReason(), 1);
-                    } else{
-                        hmBarStop.put(stop.getReason(), hmBarStop.get(stop.getReason())+1);
-                    }
-
-                    if(hmBarDuration.get(stop.getReason())==null){
-                        hmBarDuration.put(stop.getReason(), stop.getDuration());
-                    } else{
-                        hmBarDuration.put(stop.getReason(), hmBarDuration.get(stop.getReason())+stop.getDuration());
-                    }
-                }
-
-                hmBarStopSorted = Utils.sortByValues(hmBarStop);
-                hmBarDurationSorted = Utils.sortByValues(hmBarDuration);
-
-//                int maxStoped = 0;
-//                int maxStopedDuration = 0;
-//
-//                if (hmBarStopSorted.size()>0 && hmBarDurationSorted.size()>0){
-//                    maxStoped = hmBarStopSorted.entrySet().iterator().next().getValue();
-//                    maxStopedDuration = hmBarDurationSorted.entrySet().iterator().next().getValue();
-//                }
-
-
-//                updateBarStops(true);
-                Iterator it = hmBarStopSorted.entrySet().iterator();
-                reasonCount = 1;
-//                float scaleDuration;
-
-                while (it.hasNext()) {
-                    Map.Entry pair = (Map.Entry)it.next();
-
-                    BarEntry barEntry = new BarEntry(reasonCount,(Integer) pair.getValue());
-                    barEntries.add(barEntry);
-
-
-                    if(hmReasonAndX.get(reasonCount)==null){
-                        hmReasonAndX.put(reasonCount, (Integer) pair.getKey());
-                    }
-
-//                    if(maxStopedDuration==0){
-//                        scaleDuration = 0;
-//                    }else{
-//                        scaleDuration = ((float) hmBarDuration.get((Integer) pair.getKey())/maxStopedDuration)*maxStoped;
-//                    }
-//                    BarEntry barEntryDuration = new BarEntry(reasonCount,scaleDuration);
-//                    barEntriesDuration.add(barEntryDuration);
-                    reasonCount++;
-                }
-
-                Iterator itDuration = hmBarDurationSorted.entrySet().iterator();
-                reasonCount = 1;
-//                float scaleDuration;
-
-                while (itDuration.hasNext()) {
-                    Map.Entry pair = (Map.Entry)itDuration.next();
-
-                    BarEntry barEntry = new BarEntry(reasonCount,(Integer) pair.getValue());
-                    barEntriesDuration.add(barEntry);
-
-
-                    if(hmReasonAndXDuration.get(reasonCount)==null){
-                        hmReasonAndXDuration.put(reasonCount, (Integer) pair.getKey());
-                    }
-
-//                    if(maxStopedDuration==0){
-//                        scaleDuration = 0;
-//                    }else{
-//                        scaleDuration = ((float) hmBarDuration.get((Integer) pair.getKey())/maxStopedDuration)*maxStoped;
-//                    }
-//                    BarEntry barEntryDuration = new BarEntry(reasonCount,scaleDuration);
-//                    barEntriesDuration.add(barEntryDuration);
-                    reasonCount++;
-                }
-
-
-                dataSets = new ArrayList<ILineDataSet>();
-                if(entries.size()>0){
-                    dataSet = new LineDataSet(entries, "Speed");
-                    dataSet.setDrawValues(false);
-                    dataSet.setHighlightEnabled(false);
-                    dataSet.setColor(ContextCompat.getColor(getContext(),R.color.colorPrimary));
-                    dataSet.setDrawCircles(false);
-
-                    invalidateChart  = true;
-                    dataSets.add(dataSet);
-                }
-
-                if(entriesStops.size()>0){
-
-                    datasetStops = new LineDataSet(entriesStops, "Stops");
-                    datasetStops.setHighlightEnabled(true);
-                    datasetStops.setHighlightLineWidth(Constants.HIGH_LIGHT_LINE_WIDTS);
-                    datasetStops.setCircleRadius(Constants.CHART_CIRCLE_RADIUS);
-                    datasetStops.setCircleColor(Color.RED);
-                    datasetStops.setColor(Color.TRANSPARENT);
-                    datasetStops.setValueFormatter(new MyValueFormatter());
-                    datasetStops.setValueTextSize(Constants.TEXT_VALUE_SIZE);
-                    datasetStops.setCircleColorHole(Color.RED);
-                    datasetStops.setValueTextColor(Color.RED);
-
-                    invalidateChart  = true;
-                    dataSets.add(datasetStops);
-
-
-
-                }
-
-                if(barEntries.size()>0){
-                    barDataSet = new BarDataSet(barEntries, "Stops");
-                    barDataSet.setColors(ColorTemplate.COLORFUL_COLORS);
-                    barDataSet.setValueTextColor(Color.BLUE);
-                    barDataSet.setValueTextSize(Constants.TEXT_VALUE_SIZE);
-                    barDataSet.setValueFormatter(new MyYValueFormatter());
-                    invalidateBarChart = true;
-                }
-
-                if(barEntriesDuration.size()>0){
-
-                    barDataSetDuration = new BarDataSet(barEntriesDuration, "Stops duration");
-                    barDataSetDuration.setColors(ColorTemplate.COLORFUL_COLORS);
-                    barDataSetDuration.setValueTextColor(Color.BLUE);
-                    barDataSetDuration.setValueTextSize(Constants.TEXT_VALUE_SIZE);
-                    barDataSetDuration.setValueFormatter(new MyYValueFormatter());
-                    invalidateBarChart = true;
-
-                }
-
-                if (invalidateChart) {
-                    lineData = new LineData(dataSets);
-                    chart.setData(lineData);
-                }
-
-                if (invalidateBarChart){
-//                    float groupSpace = 0.06f;
-//                    float barSpace = 0.02f; // x2 dataset
-//                    float barWidth = 0.45f;
-
-//                    barData = new BarData(barDataSet,barDataSetDuration);
-                    if(!switchButton.isChecked()){
-                        barData = new BarData(barDataSet);
-                    } else{
-                        barData = new BarData(barDataSetDuration);
-                    }
-
-//                    barData.setBarWidth(barWidth);
-                    barChart.setData(barData);
-//                    barChart.groupBars(1,groupSpace,barSpace);
-//                    barChart.setFitBars(true);
-                }
-
-                graphRealm.close();
+                updateGraphs();
 
             } catch (Exception e) {
 
@@ -844,13 +743,12 @@ public class FragmentMain extends BaseFragment implements
             {
                 return "";
             }
-
         }
     }
 
     public class MyYValueFormatter implements IValueFormatter {
 
-        private DecimalFormat mFormat;
+            private DecimalFormat mFormat;
 
         public MyYValueFormatter() {
             mFormat = new DecimalFormat("###,###,##0.0"); // use one decimal
@@ -884,12 +782,9 @@ public class FragmentMain extends BaseFragment implements
         public CustomMarkerView(Context context, int layoutResource) {
             super(context, layoutResource);
 
-            // find your layout components
             tvContent = (TextView) findViewById(R.id.tvContent);
         }
 
-        // callbacks everytime the MarkerView is redrawn, can be used to update the
-        // content (user-interface)
         @Override
         public void refreshContent(Entry entry, Highlight highlight) {
             if(hmReasonsDescription.get(entry)!=null){
@@ -902,8 +797,6 @@ public class FragmentMain extends BaseFragment implements
                 tvContent.setText(getString(R.string.emptyDescription));
             }
 
-
-            // this will perform necessary layouting
             super.refreshContent(entry, highlight);
         }
 
@@ -913,7 +806,6 @@ public class FragmentMain extends BaseFragment implements
         public MPPointF getOffset() {
 
             if(mOffset == null) {
-                // center the marker horizontally and vertically
                 mOffset = new MPPointF(-(getWidth() / 2), -getHeight()*2);
             }
 
@@ -922,7 +814,6 @@ public class FragmentMain extends BaseFragment implements
 
         @Override
         public void draw(Canvas canvas, float posX, float posY) {
-            // take offsets into consideration
             int lineChartWidth = 0;
             int lineChartHeight = 0;
             float offsetX = getOffset().getX();
@@ -948,7 +839,6 @@ public class FragmentMain extends BaseFragment implements
             }
             posY += offsetY;
 
-            // translate to the correct position and draw
             canvas.translate(posX, posY);
             draw(canvas);
             canvas.translate(-posX, -posY);
@@ -964,12 +854,9 @@ public class FragmentMain extends BaseFragment implements
         public BarCustomMarkerView(Context context, int layoutResource) {
             super(context, layoutResource);
 
-            // find your layout components
             tvContent = (TextView) findViewById(R.id.tvContent);
         }
 
-        // callbacks everytime the MarkerView is redrawn, can be used to update the
-        // content (user-interface)
         @Override
         public void refreshContent(Entry entry, Highlight highlight) {
             if(!switchButton.isChecked()){
@@ -1000,7 +887,6 @@ public class FragmentMain extends BaseFragment implements
                 }
             }
 
-            // this will perform necessary layouting
             super.refreshContent(entry, highlight);
         }
 
@@ -1010,7 +896,6 @@ public class FragmentMain extends BaseFragment implements
         public MPPointF getOffset() {
 
             if(mOffset == null) {
-                // center the marker horizontally and vertically
                 mOffset = new MPPointF(-(getWidth() / 2), -getHeight()*2);
             }
 
@@ -1019,7 +904,6 @@ public class FragmentMain extends BaseFragment implements
 
         @Override
         public void draw(Canvas canvas, float posX, float posY) {
-            // take offsets into consideration
             int lineChartWidth = 0;
             int lineChartHeight = 0;
             float offsetX = getOffset().getX();
@@ -1045,7 +929,6 @@ public class FragmentMain extends BaseFragment implements
             }
             posY += offsetY;
 
-            // translate to the correct position and draw
             canvas.translate(posX, posY);
             draw(canvas);
             canvas.translate(-posX, -posY);
@@ -1087,9 +970,6 @@ public class FragmentMain extends BaseFragment implements
 
     }
 
-
-
-
     @Override
     public boolean onBackPressed() {
 
@@ -1101,6 +981,49 @@ public class FragmentMain extends BaseFragment implements
         ((MainActivity) getActivity()).replaceFragment(Constants.LINE_FRAGMENT,bundle,"");
 
         return true;
+    }
+
+    @Override
+    public void onChartFling(MotionEvent me1, MotionEvent me2, float velocityX, float velocityY) {
+        me1 = null;
+        me2 = null;
+
+}
+    @Override
+    public void onChartGestureStart(MotionEvent me, ChartTouchListener.ChartGesture lastPerformedGesture) {
+
+        me = null;
+}
+
+    @Override
+public void onChartGestureEnd(MotionEvent me, ChartTouchListener.ChartGesture lastPerformedGesture) {
+        me = null;
+
+}
+
+@Override
+public void onChartLongPressed(MotionEvent me) {
+    me = null;
+}
+
+    @Override
+public void onChartDoubleTapped(MotionEvent me) {
+        me = null;
+}
+
+@Override
+public void onChartSingleTapped(MotionEvent me) {
+    me = null;
+}
+
+@Override
+public void onChartScale(MotionEvent me, float scaleX, float scaleY) {
+    me = null;
+}
+
+@Override
+public void onChartTranslate(MotionEvent me, float dX, float dY) {
+    me = null;
     }
 
 }

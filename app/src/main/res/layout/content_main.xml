@@ -79,4 +79,15 @@
         </LinearLayout>
         <!--</android.support.v4.widget.NestedScrollView>-->
     </android.support.v4.widget.SwipeRefreshLayout>
+
+    <LinearLayout
+        android:id="@+id/transparentLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@android:color/transparent"
+        android:visibility="gone"
+        android:orientation="vertical"
+        android:clickable="false">
+
+    </LinearLayout>
 </RelativeLayout>

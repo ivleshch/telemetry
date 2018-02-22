@@ -6,6 +6,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.ivleshch.telemetry.data.Constants;
 import com.ivleshch.telemetry.data.Event;
 import com.ivleshch.telemetry.data.LineInformation;
 import com.ivleshch.telemetry.data.ReportForShift;
@@ -424,6 +425,12 @@ public class Utils {
 
     }
 
+    public static boolean istimerNeedToUpdate(Date startOfShifr, Date endOfShift){
+
+        return (currentDate().after(startOfShifr) && currentDate().before(endOfShift));
+
+    }
+
     public static boolean dateBetween(Date date, Date dateStart){
         Calendar calendarDate = Calendar.getInstance();
         Calendar calendarDateStart = Calendar.getInstance();
@@ -529,6 +536,7 @@ public class Utils {
 
         reportForShiftRealmQuery.equalTo("startOfShift",startOfShift);
         reportForShiftRealmQuery.equalTo("endOfShift",endOfShift);
+        reportForShiftRealmQuery.equalTo("conducted",true);
 
         RealmResults<ReportForShift> reportForShifts = reportForShiftRealmQuery.endGroup().findAll();
 
@@ -558,7 +566,7 @@ public class Utils {
                     .equalTo("workCenter",reportForShift.getWorkCenter().getUid())
                     .findAll();
 
-//            quantityEvents = events.sum("count").intValue();
+            quantityEvents = events.sum("count").intValue();
             quantityStops = stops.size();
 
             shiftDuration = new Duration(startOfShift.getTime(), endOfShift.getTime());
@@ -631,8 +639,10 @@ public class Utils {
                         lineRealm.copyFromRealm(reportForShift.getShiftMaster()),
                         lineRealm.copyFromRealm(reportForShiftProduct.getNomenclature()),
                         reportForShiftProduct.getQuantityPlan(),
-                        (reportForShift.getFinished())? reportForShiftProduct.getQuantityFact()  : Constants.NO_DATA,
+//                        (reportForShift.getFinished())? reportForShiftProduct.getQuantityFact()  : Constants.NO_DATA,
+                        (reportForShift.getFinished())? quantityEvents: Constants.NO_DATA,
                         (reportForShift.getFinished())? reportForShiftProduct.getQuantityDefect()  : Constants.NO_DATA,
+
                         reportForShiftProduct.getQuantityWaste(),
                         reportForShiftProduct.getUnitQuantity(),
                         reportForShiftProduct.getUnitWeight(),
@@ -759,4 +769,38 @@ public class Utils {
         llQuality.setBackgroundColor(ContextCompat.getColor(llOee.getContext(), Utils.percentColor(lineInformation.getQualityPercent())));
     }
 
+    public static boolean isTimer(int response){
+        boolean isTimer = false;
+        switch (response){
+            case Constants.ASYNC_TASK_RESULT_SUCCESSFUL:
+                isTimer = false;
+                break;
+            case Constants.ASYNC_TASK_RESULT_FAILED:
+                isTimer = false;
+                break;
+            case Constants.TIMER_ASYNC_TASK_RESULT_SUCCESSFUL:
+                isTimer = true;
+                break;
+            case Constants.TIMER_ASYNC_TASK_RESULT_FAILED:
+                isTimer = true;
+                break;
+            default:
+                break;
+        }
+
+        return isTimer;
+    }
+
+    public static boolean isTimerSuccesful(int response){
+        boolean isTimerSuccesful = false;
+        switch (response){
+            case Constants.TIMER_ASYNC_TASK_RESULT_SUCCESSFUL:
+                isTimerSuccesful = true;
+                break;
+            default:
+                break;
+        }
+
+        return isTimerSuccesful;
+    }
 }

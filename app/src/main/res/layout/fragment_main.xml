@@ -522,6 +522,15 @@
                     android:visibility="visible"
                     />
 
+                <ProgressBar
+                    android:id="@+id/pb_getDataLineChart"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:layout_centerInParent="true"
+                    android:clickable="true"
+                    android:visibility="gone"
+                    />
+
             </RelativeLayout>
 
             <LinearLayout
@@ -583,6 +592,12 @@
                     android:layout_height="300dp"
                     android:visibility="visible" />
 
+                <ProgressBar
+                    android:id="@+id/pb_getDataBarChart"
+                    android:layout_width="100dp"
+                    android:layout_height="100dp"
+                    android:layout_centerInParent="true"
+                    android:visibility="gone" />
 
             </RelativeLayout>
         </LinearLayout>

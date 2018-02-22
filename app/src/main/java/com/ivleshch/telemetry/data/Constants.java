@@ -1,4 +1,4 @@
-package com.ivleshch.telemetry;
+package com.ivleshch.telemetry.data;
 
 /**
  * Created by Ivleshch on 12.01.2018.
@@ -25,14 +25,14 @@ public class Constants {
     public static final String FIRST_SHIFT_NAME =  "08:00 - 20:00";
     public static final String SECOND_SHIFT_NAME = "20:00 - 08:00";
 
-    public static final Integer TIME_INTERVAL_NOTIFICATION_START = 10000;  //60 sec
-    public static final Integer TIME_INTERVAL_NOTIFICATION_REPEAT = 10000; //60 sec
+    public static final Integer TIME_INTERVAL_NOTIFICATION_START = 60000;  //60 sec
+    public static final Integer TIME_INTERVAL_NOTIFICATION_REPEAT = 60000; //60 sec
 
-    public static final Integer ASYNC_TASK_RESULT_SUCCESSFUL = 2001;
-    public static final Integer ASYNC_TASK_RESULT_FAILED = 2002;
+    public static final int ASYNC_TASK_RESULT_SUCCESSFUL = 2001;
+    public static final int ASYNC_TASK_RESULT_FAILED = 2002;
 
-    public static final Integer TIMER_ASYNC_TASK_RESULT_SUCCESSFUL = 3001;
-    public static final Integer TIMER_ASYNC_TASK_RESULT_FAILED = 3002;
+    public static final int TIMER_ASYNC_TASK_RESULT_SUCCESSFUL = 3001;
+    public static final int TIMER_ASYNC_TASK_RESULT_FAILED = 3002;
     public static final int     TIMER_RUN_ASYNC = 3;
 
     public static final int PERCENT_COLOR_GRREN = 90;
@@ -42,8 +42,8 @@ public class Constants {
     public static final int LINE_FRAGMENT   = 10001;
     public static final int CHART_FRAGMENT  = 10002;
 
-    public static final String FRAGMENT_LINE_CLASS = "com.ivleshch.telemetry.FragmentLines";
-    public static final String FRAGMENT_MAIN_CLASS = "com.ivleshch.telemetry.FragmentMain";
+    public static final String FRAGMENT_LINE_CLASS = "com.ivleshch.telemetry.activities.FragmentLines";
+    public static final String FRAGMENT_MAIN_CLASS = "com.ivleshch.telemetry.activities.FragmentMain";
 
     public static final String FRAGMENT_CLICK_ON_LINE = "fragment_click_on_line";
 
