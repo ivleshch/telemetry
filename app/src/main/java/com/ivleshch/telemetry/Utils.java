@@ -63,6 +63,46 @@ public class Utils {
 
     }
 
+    public static Date dateFromDayMonthYear(int day, int month, int year){
+        Calendar cal = Calendar.getInstance();
+//        if(month>0){
+//            month = month-1;
+//        }
+
+        cal.set(year, month, day,0,0,0);
+
+        return cal.getTime();
+    }
+
+    public static Date startOfDay(Date date){
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(date);
+
+        cal.set(Calendar.HOUR_OF_DAY,0);
+        cal.set(Calendar.MINUTE,0);
+        cal.set(Calendar.SECOND,0);
+        cal.set(Calendar.MILLISECOND,0);
+
+        return cal.getTime();
+    }
+
+    public static Date endOfDay(Date date){
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(date);
+        cal.add(Calendar.DATE,1);
+
+        cal.set(Calendar.HOUR_OF_DAY,0);
+        cal.set(Calendar.MINUTE,0);
+        cal.set(Calendar.SECOND,0);
+        cal.set(Calendar.MILLISECOND,0);
+
+        cal.add(Calendar.MILLISECOND,-1);
+
+        return cal.getTime();
+    }
+
+
+
     public static Date dateFromUnix(Long datetime) {
         Calendar cal = Calendar.getInstance();
         cal.setTimeInMillis(datetime*1000L);
@@ -387,6 +427,28 @@ public class Utils {
         return simpleDateFormatDate.format(date)
                 + " "
                 + simpleDateFormatHourMinute.format(startOfShift);
+//                + " - "
+//                + simpleDateFormatHourMinute.format(endOfShift);
+
+    }
+
+    public static String formatShiftStartEnd(Date startOfShift, Date endOfShift){
+
+        SimpleDateFormat simpleDateFormatHourMinute = new SimpleDateFormat("HH:mm");
+
+        return simpleDateFormatHourMinute.format(startOfShift)
+                + "-"
+                + simpleDateFormatHourMinute.format(endOfShift);
+//                + " - "
+//                + simpleDateFormatHourMinute.format(endOfShift);
+
+    }
+
+    public static String formatDateRange(Date date){
+
+        SimpleDateFormat simpleDateFormatDate = new SimpleDateFormat("dd MMM EE");
+
+        return simpleDateFormatDate.format(date);
 //                + "-"
 //                + simpleDateFormatHourMinute.format(endOfShift);
 
@@ -639,8 +701,8 @@ public class Utils {
                         lineRealm.copyFromRealm(reportForShift.getShiftMaster()),
                         lineRealm.copyFromRealm(reportForShiftProduct.getNomenclature()),
                         reportForShiftProduct.getQuantityPlan(),
-//                        (reportForShift.getFinished())? reportForShiftProduct.getQuantityFact()  : Constants.NO_DATA,
-                        (reportForShift.getFinished())? quantityEvents: Constants.NO_DATA,
+                        (reportForShift.getFinished())? reportForShiftProduct.getQuantityFact()  : Constants.NO_DATA,
+//                        (reportForShift.getFinished())? quantityEvents: Constants.NO_DATA,
                         (reportForShift.getFinished())? reportForShiftProduct.getQuantityDefect()  : Constants.NO_DATA,
 
                         reportForShiftProduct.getQuantityWaste(),
@@ -803,4 +865,78 @@ public class Utils {
 
         return isTimerSuccesful;
     }
+
+    public static boolean dateBetweenStartEndShift(Date startDateShift, Date endDateShift,Long longDate, Long[][] longStartEndShift){
+
+        boolean filterAccept = false;
+
+//        if(longStartEndShift ==null){
+//            filterAccept=true;
+//        }else{
+//            if(longStartEndShift.length==0){
+//                filterAccept = false;
+//            }else{
+//
+//                Calendar calendarDate = Calendar.getInstance();
+//                calendarDate.setTime(Utils.dateFromUnix(longDate));
+//
+//                Calendar calendarDay = Calendar.getInstance();
+//                Calendar calendarStart = Calendar.getInstance();
+//                Calendar calendarEnd = Calendar.getInstance();
+//
+//                Duration shiftDuration = new Duration(startDateShift.getTime(), endDateShift.getTime());
+//                long shiftDurationDays = shiftDuration.getStandardDays();
+//
+//                int indexDay;
+//                if(shiftDurationDays==0){
+//                    filterAccept = false;
+//                } else if(shiftDurationDays==1){
+//                    indexDay = -1;
+//                }else{
+//                    indexDay=0;
+//                }
+//
+//
+//                for (indexDay;indexDay<shiftDurationDays;indexDay++){
+//
+//                    for(int indexShift = 0;indexShift<longStartEndShift.length;indexShift++){
+//
+//                        boolean addDay = false;
+//
+//                        calendarStart.setTime(Utils.dateFromUnixWithOut1000(longStartEndShift[indexShift][0]));
+//                        calendarEnd.setTime(Utils.dateFromUnixWithOut1000(longStartEndShift[indexShift][1]));
+//
+//                        if(Utils.startOfDay(calendarEnd.getTime()).after(calendarStart.getTime())){
+//                            addDay = true;
+//                        }
+//
+//
+//                        calendarStart.set(Calendar.YEAR,calendarDate.get(Calendar.YEAR));
+//                        calendarStart.set(Calendar.MONTH,calendarDate.get(Calendar.MONTH));
+//                        calendarStart.set(Calendar.DAY_OF_MONTH,calendarDate.get(Calendar.DAY_OF_MONTH));
+//                        calendarStart.set(Calendar.SECOND,0);
+//                        calendarStart.set(Calendar.MILLISECOND,0);
+//
+//                        calendarEnd.set(Calendar.YEAR,calendarDate.get(Calendar.YEAR));
+//                        calendarEnd.set(Calendar.MONTH,calendarDate.get(Calendar.MONTH));
+//                        calendarEnd.set(Calendar.DAY_OF_MONTH,calendarDate.get(Calendar.DAY_OF_MONTH));
+//                        calendarEnd.set(Calendar.SECOND,0);
+//                        calendarEnd.set(Calendar.MILLISECOND,0);
+//
+//                        if(addDay){
+//                            calendarEnd.add(Calendar.DATE,1);
+//                        }
+//
+//                        if(calendarDate.getTime().after(calendarStart.getTime()) && calendarDate.getTime().before(calendarEnd.getTime())){
+//                            filterAccept = true;
+//                            break;
+//                        }
+//                    }
+//                }
+//            }
+//        }
+
+        return filterAccept;
+    }
+
 }

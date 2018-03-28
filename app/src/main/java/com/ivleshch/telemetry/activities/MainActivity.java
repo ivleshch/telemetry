@@ -90,11 +90,15 @@ public class MainActivity extends AppCompatActivity
     private LinearLayout transparentLayout;
     private boolean autoUpdate;
     private int repeatMin;
+    private final String CURRENT_SHIFT_UID = "current_shift_uid";
+    private String currentShiftUid;
+
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_main);
 
         final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
@@ -223,6 +227,7 @@ public class MainActivity extends AppCompatActivity
 
 
         calendarCurrentDate = Calendar.getInstance();
+
 
         currentShiftName = Utils.determineShift(calendarCurrentDate.getTime());
 
@@ -423,10 +428,17 @@ public class MainActivity extends AppCompatActivity
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
 
         item.setChecked(true);
+        Intent intent;
 
         switch (item.getItemId()){
             case R.id.nav_settings:
-                Intent intent = new Intent(this, SettingsActivity.class);
+                intent = new Intent(this, SettingsActivity.class);
+                startActivity(intent);
+                break;
+            case R.id.nav_analytics:
+                intent = new Intent(this, AnalyticsStopsActivity.class);
+                intent.putExtra(DbContract.DATABASE_TABLE_LINE_INFORMATION_START_OF_SHIFT,startofShift.getTime());
+                intent.putExtra(DbContract.DATABASE_TABLE_LINE_INFORMATION_END_OF_SHIFT,endOfShift.getTime());
                 startActivity(intent);
                 break;
             default:

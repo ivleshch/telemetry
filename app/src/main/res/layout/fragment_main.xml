@@ -558,7 +558,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Количество"
+                    android:text="@string/titleQuantity"
                     android:textColor="@color/colorPrimary"/>
 
                 <Switch
@@ -573,7 +573,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Время"
+                    android:text="@string/titleTime"
                     android:textColor="@color/colorPrimary"/>
 
             </LinearLayout>

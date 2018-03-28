@@ -13,6 +13,8 @@
     <string name="titleAvailability">Availability</string>
     <string name="titlePerformance">Performance</string>
     <string name="titleStops">Остановки</string>
+    <string name="titleQuantity">Количество</string>
+    <string name="titleTime">Время</string>
 
     <string name="messageEmptyData">Данные за указанную дату отсутствуют</string>
     <string name="messageUdate">Обновление...</string>
@@ -23,9 +25,14 @@
     <string name="title_settings_server">Сервер</string>
     <string name="title_settings_web_service">Имя публикации</string>
     <string name="title_settings">Настройки</string>
+    <string name="title_analytics">Остановки</string>
+    <string name="title_filters">Фильтр</string>
 
     <string name="title_settings_auto_update">Автообновление данных</string>
     <string name="title_settings_auto_update_interval">Интервал, мин.</string>
+
+    <string name="title_filter_lines">Линии</string>
+
 
 
 

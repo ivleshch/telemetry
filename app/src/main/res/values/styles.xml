@@ -16,6 +16,15 @@
         <item name="windowNoTitle">true</item>
     </style>
 
+    <style name="LightDialogWithNoTitle" parent="Theme.AppCompat.Light.Dialog">
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <style name="NavigationViewStyle">
+        <!--<item name="android:textSize">20sp</item> &lt;!&ndash; menu item text size&ndash;&gt;-->
+        <!--<item name="android:listPreferredItemHeightSmall">wrap_content</item>&lt;!&ndash; menu item height&ndash;&gt;-->
+    </style>
+
     <!--<style name="SpeedView" parent="SpeedView">-->
         <!--<item name="sv_centerCircleColor">@color/colorPrimaryLight</item>-->
 

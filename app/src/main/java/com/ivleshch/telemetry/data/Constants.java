@@ -49,5 +49,9 @@ public class Constants {
 
     public static Integer NO_DATA = -1;
 
+    public static final int REQUEST_CODE_DATE_PICKER_OK = 10001;
+    public static final int REQUEST_CODE_DATE_PICKER_CANCEL = 10002;
+
+
 
 }

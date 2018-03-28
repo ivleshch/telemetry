@@ -9,7 +9,8 @@
     <color name="colorSecondaryText">#757575</color>
     <color name="colorDivider">#BDBDBD</color>
 
-    <color name="colorAccent">#FF4081</color>
+    <!--<color name="colorAccent">#FF4081</color>-->
+    <color name="colorAccent">#009688</color>
 
     <!--<color name="colorAccent">#00796B</color>-->
 
@@ -47,6 +48,9 @@
 
     <color name="colorRed500">#f44336</color>
     <color name="colorRed400">#ef5350</color>
+
+    <color name="colorDisable">#99000000</color>
+
 
 
 

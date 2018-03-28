@@ -6,6 +6,7 @@ import android.util.Log;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+import com.ivleshch.telemetry.Utils;
 import com.ivleshch.telemetry.data.Constants;
 import com.ivleshch.telemetry.data.DbContract;
 import com.ivleshch.telemetry.data.DbJson;
@@ -18,7 +19,6 @@ import com.ivleshch.telemetry.data.Shift;
 import com.ivleshch.telemetry.data.ShiftUpdate;
 import com.ivleshch.telemetry.data.Stop;
 import com.ivleshch.telemetry.data.WorkCenter;
-import com.ivleshch.telemetry.Utils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -38,7 +38,8 @@ import java.util.Date;
 import io.realm.Realm;
 import io.realm.RealmResults;
 
-import static org.apache.commons.lang3.math.NumberUtils.max;
+import static java.lang.StrictMath.max;
+
 
 /**
  * Created by Ivleshch on 11.01.2018.

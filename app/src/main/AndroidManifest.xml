@@ -24,7 +24,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".activities.OeeActivity"
+            android:name=".activities.AnalyticsStopsActivity"
             android:screenOrientation="portrait"
             android:launchMode="singleTask"
             android:parentActivityName=".activities.MainActivity">
@@ -42,6 +42,15 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".activities.MainActivity"/>
         </activity>
+
+        <activity
+            android:name=".activities.ActivityDatePicker"
+            android:screenOrientation="portrait"
+            android:launchMode="singleTask"
+            android:theme="@style/LightDialogWithNoTitle"
+            >
+        </activity>
+
 
         <meta-data
             android:name="io.fabric.ApiKey"

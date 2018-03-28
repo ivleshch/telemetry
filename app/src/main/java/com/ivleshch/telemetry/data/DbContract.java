@@ -27,6 +27,9 @@ public class DbContract {
     public static final String SETTINGS_AUTO_UPDATE_INTERVAL_KEY = "settings_update_interval";
     public static final String SETTINGS_AUTO_UPDATE_INTERVAL_VALUE = "5";
 
+    public static final String START_DATE = "start_date";
+    public static final String END_DATE = "end_date";
+
 
 
     public static final String CHECK_URL = "http://%1$s/%2$s/ws/ExchangeMobile.1cws?wsdl";

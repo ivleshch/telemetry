@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <!--<include layout="@layout/toolbar"/>-->
+
+    <include layout="@layout/empty_data" />
+
+    <!--<LinearLayout-->
+        <!--android:id="@+id/ll_analytics_stops"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="match_parent">-->
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/activity_view_margin_middle"
+        android:gravity="center"
+        android:maxLines="1"
+        android:text="@string/titleQuantity"
+        android:textColor="@color/colorPrimary"
+        android:textSize="@dimen/text_size_small"
+        android:textStyle="bold" />
+
+    <com.github.mikephil.charting.charts.PieChart
+        android:layout_weight="1"
+        android:id="@+id/piechartStopsQuantity"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/activity_view_margin_middle"
+        android:gravity="center"
+        android:maxLines="1"
+        android:text="@string/titleTime"
+        android:textColor="@color/colorPrimary"
+        android:textSize="@dimen/text_size_small"
+        android:textStyle="bold" />
+
+    <com.github.mikephil.charting.charts.PieChart
+        android:layout_weight="1"
+        android:id="@+id/piechartStopsDuration"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"/>
+    <!--</LinearLayout>-->
+</LinearLayout>
